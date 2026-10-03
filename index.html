@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Measurement Master: Error Analytics BATTLE PRO (Multi-Device)</title>
+    <title>Measurement Master: Simultaneous Error Battle PRO</title>
     
     <!-- MathJax for rendering LaTeX math -->
     <script>
@@ -20,7 +20,7 @@
     
     <!-- PeerJS for Cross-Device WebRTC Multiplayer Battles -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
@@ -28,7 +28,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f1f5f9; margin: 0; padding: 0; }
         
         #game-container {
-            background: #0f172a; width: 100%; max-width: 720px; margin: 0 auto;
+            background: #0f172a; width: 100%; max-width: 800px; margin: 0 auto;
             min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 35px rgba(0,0,0,0.8);
             border-left: 1px solid #1e293b; border-right: 1px solid #1e293b;
         }
@@ -43,16 +43,16 @@
         
         /* Battle HUD Layout */
         .battle-hud {
-            display: grid; grid-template-columns: 1fr 80px 1fr; gap: 10px; align-items: center;
+            display: grid; grid-template-columns: 1fr 90px 1fr; gap: 10px; align-items: center;
             background: #1e293b; padding: 12px; border-radius: 12px; margin-bottom: 15px;
             border: 1px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .player-box { text-align: center; }
-        .player-name-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .player-name-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
         .p1-color { color: #f43f5e; }
         .p2-color { color: #06b6d4; }
         
-        .hp-bar-bg { background: #0f172a; height: 16px; border-radius: 8px; overflow: hidden; border: 1px solid #475569; position: relative; }
+        .hp-bar-bg { background: #0f172a; height: 18px; border-radius: 9px; overflow: hidden; border: 1px solid #475569; position: relative; }
         .hp-bar-fill { height: 100%; transition: width 0.3s ease; }
         .p1-hp { background: linear-gradient(90deg, #e11d48, #f43f5e); }
         .p2-hp { background: linear-gradient(90deg, #0284c7, #06b6d4); }
@@ -62,11 +62,10 @@
         .timer-display { text-align: center; font-size: 13px; font-weight: 800; color: #94a3b8; margin-top: 4px; }
         
         .turn-banner {
-            text-align: center; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 15px; margin-bottom: 15px;
-            letter-spacing: 0.5px; animation: pulse 1.5s infinite alternate;
+            text-align: center; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 15px; margin-bottom: 15px;
+            letter-spacing: 0.5px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b;
+            animation: pulse 1.5s infinite alternate;
         }
-        .p1-turn { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
-        .p2-turn { background: rgba(6, 182, 212, 0.2); color: #06b6d4; border: 1px solid #06b6d4; }
         @keyframes pulse { from { opacity: 0.8; } to { opacity: 1; } }
         
         .q-card {
@@ -78,32 +77,44 @@
             border: 1px solid #475569; overflow: hidden; background-color: #ffffff; display: none;
         }
         
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        /* Dual Control Layouts */
+        .dual-controls-wrapper { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .local-dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .player-control-panel { background: #182234; padding: 12px; border-radius: 12px; border: 2px solid #334155; }
+        .p1-panel { border-color: #f43f5e; }
+        .p2-panel { border-color: #06b6d4; }
+        .panel-title { text-align: center; font-size: 13px; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .options-grid-single { grid-template-columns: 1fr 1fr; }
+        
         .opt-btn {
-            background: #1e293b; border: 2px solid #334155; color: #f1f5f9; padding: 15px; font-size: 15px;
+            background: #1e293b; border: 2px solid #334155; color: #f1f5f9; padding: 12px; font-size: 14px;
             border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.15s ease;
             display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 #0f172a;
-            text-align: center; min-height: 60px;
+            text-align: center; min-height: 52px; width: 100%;
         }
-        .opt-btn:active { transform: translateY(3px); box-shadow: none; }
+        .opt-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+        .opt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .correct-btn { background: #10b981 !important; border-color: #059669 !important; color: white !important; box-shadow: 0 4px 0 #047857 !important; }
         .wrong-btn { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; box-shadow: 0 4px 0 #b91c1c !important; }
         
-        #fitb-area { text-align: center; margin-top: 15px; display: none; }
-        #fitb-input {
-            padding: 14px; font-size: 20px; font-weight: bold; text-align: center; width: 100%; max-width: 260px;
-            border: 2px solid #475569; border-radius: 10px; background: #0f172a; color: white; outline: none; transition: 0.2s;
+        .fitb-box { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .fitb-input {
+            padding: 10px; font-size: 18px; font-weight: bold; text-align: center; width: 100%;
+            border: 2px solid #475569; border-radius: 8px; background: #0f172a; color: white; outline: none; transition: 0.2s;
         }
-        #fitb-input:focus { border-color: #6366f1; }
+        .fitb-input:focus { border-color: #6366f1; }
         
         .action-btn {
-            background: #6366f1; color: white; border: none; padding: 15px 24px; font-size: 16px;
+            background: #6366f1; color: white; border: none; padding: 14px 20px; font-size: 15px;
             border-radius: 10px; cursor: pointer; margin: 10px auto; font-weight: 800;
             box-shadow: 0 4px 0 #4338ca; width: 100%; display: block; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .action-btn:active { transform: translateY(3px); box-shadow: none; }
+        .action-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        #feedback-area { text-align: center; font-size: 16px; font-weight: 800; margin-top: 15px; min-height: 35px; }
+        #feedback-area { text-align: center; font-size: 16px; font-weight: 800; margin-top: 15px; min-height: 40px; }
         input[type="text"], input[type="number"] { padding: 12px; border-radius: 8px; border: 2px solid #334155; background: #0f172a; color: white; font-size: 15px; margin-bottom: 12px; text-align: center; width: 100%; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; background: #1e293b; border-radius: 8px; overflow: hidden; }
         th { text-align: left; background: #334155; color: #94a3b8; padding: 12px; font-size: 12px; text-transform: uppercase; }
@@ -114,7 +125,6 @@
         .mode-card.selected { border-color: #6366f1; background: rgba(99, 102, 241, 0.15); }
         .mode-card h4 { margin: 0 0 5px 0; color: #f8fafc; font-size: 14px; }
         .mode-card p { margin: 0; font-size: 11px; color: #94a3b8; }
-
         .room-panel { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 15px; text-align: center; }
         .room-code-badge { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #38bdf8; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px dashed #38bdf8; display: inline-block; margin: 10px 0; }
     </style>
@@ -122,45 +132,45 @@
 <body>
 <div id="game-container">
     <div class="header">
-        <h1>Measurement Master <span style="color:#f59e0b">BATTLE PRO</span></h1>
-        <div class="sub-header">$\text{1v1 Multi-Device Online Arena: Precision \& Error Analytics}$</div>
+        <h1>Measurement Master <span style="color:#f59e0b">SPEED BATTLE</span></h1>
+        <div class="sub-header">$\text{Simultaneous Real-Time Race: Precision \& Error Analytics}$</div>
     </div>
-
+    
     <!-- Start Screen -->
     <div id="start-screen" class="screen active">
         <div class="q-card" style="margin-bottom: 15px; text-align: left;">
-            <h3 style="margin-top:0; color:#f8fafc;">⚔️ Arena Rules & Mechanics</h3>
+            <h3 style="margin-top:0; color:#f8fafc;">⚔️ Speed Battle Mechanics</h3>
             <ul style="color:#cbd5e1; line-height: 1.8; padding-left: 20px; font-size: 13px; margin-bottom: 0;">
-                <li><strong>Cross-Device Online Duels:</strong> Battle opponents on separate phones, tablets, or PCs in real-time.</li>
-                <li><strong>Base Damage:</strong> Correct responses deal $20\text{ HP}$ base damage (+ Streak multipliers!).</li>
-                <li><strong>Recoil Error:</strong> Incorrect answers trigger $-10\text{ HP}$ self-damage and reset streak.</li>
-                <li><strong>TeX Rigor:</strong> Questions feature LaTeX math formulas and dynamic JSXGraph scale diagrams.</li>
+                <li><strong>Simultaneous Race:</strong> Both players get the EXACT same question at the same time.</li>
+                <li><strong>First Strike:</strong> The first player to answer correctly deals damage ($20\text{ HP} + \text{Streak Bonus}$).</li>
+                <li><strong>Recoil Penalty:</strong> An incorrect answer triggers $-10\text{ HP}$ self-damage and locks you out of that question!</li>
+                <li><strong>TeX Rigor:</strong> Rigorous secondary school LaTeX error analytics & JSXGraph scale figures.</li>
             </ul>
         </div>
-
+        
         <div style="margin-bottom: 15px;">
             <label style="font-size: 12px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 8px;">SELECT BATTLE MODE</label>
             <div class="mode-select-grid">
                 <div class="mode-card selected" id="mode-online" onclick="selectMode('online')">
                     <h4>🌐 Online 1v1</h4>
-                    <p>Cross-device room duel</p>
+                    <p>Cross-device race</p>
                 </div>
                 <div class="mode-card" id="mode-duel" onclick="selectMode('duel')">
                     <h4>⚔️ Local Duel</h4>
-                    <p>Pass & play same device</p>
+                    <p>Same screen split-pad</p>
                 </div>
                 <div class="mode-card" id="mode-solo" onclick="selectMode('solo')">
-                    <h4>🎯 Solo Diagnostic</h4>
-                    <p>Time attack mode</p>
+                    <h4>🎯 Solo vs Bot</h4>
+                    <p>Speed reaction test</p>
                 </div>
             </div>
         </div>
-
+        
         <div id="player-inputs" style="background:#1e293b; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155;">
             <input type="text" id="p1-name-input" placeholder="Your Name" value="Player 1" maxlength="15">
             <input type="text" id="p2-name-input" placeholder="Opponent Name (Local)" value="Player 2" maxlength="15" style="display:none;">
         </div>
-
+        
         <!-- Online Room Setup Panel -->
         <div id="online-panel" class="room-panel">
             <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -173,17 +183,16 @@
                 <div class="room-code-badge" id="display-room-code">----</div><br>
                 <span style="font-size:13px; color:#f59e0b; font-weight:bold;" id="host-status">Waiting for Opponent to Connect...</span>
             </div>
-
             <div id="join-ui" style="display:none;">
                 <input type="text" id="join-code-input" placeholder="Enter 4-Digit Code (e.g. 7842)" maxlength="4" style="text-transform:uppercase;">
                 <button class="action-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857;" onclick="joinRoom()">Connect & Start Battle</button>
             </div>
         </div>
-
-        <button class="action-btn" id="launch-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857; display:none;" onclick="startGame()">▶ Launch Battle Arena</button>
+        
+        <button class="action-btn" id="launch-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857; display:none;" onclick="startGame()">▶ Launch Speed Battle</button>
         <button class="action-btn" style="background:#3b82f6; box-shadow: 0 4px 0 #2563eb;" onclick="fetchLeaderboard()">🏆 Access Global Leaderboard</button>
     </div>
-
+    
     <!-- Game Screen -->
     <div id="game-screen" class="screen">
         <div class="battle-hud">
@@ -205,23 +214,22 @@
             </div>
         </div>
         
-        <div id="turn-banner" class="turn-banner p1-turn">Player 1's Turn to Attack!</div>
+        <div id="turn-banner" class="turn-banner">⚡ RACE! First to submit the correct answer strikes!</div>
         
         <div class="q-card">
-            <div id="question-text">Initializing parameters...</div>
+            <div id="question-text">Initializing synchronized question...</div>
             <div id="jxgbox" class="jxgbox"></div>
         </div>
         
-        <div class="options-grid" id="options-area"></div>
-        
-        <div id="fitb-area">
-            <input type="number" step="any" id="fitb-input" placeholder="Numerical Value...">
-            <button class="action-btn" style="max-width: 250px; background:#3b82f6; box-shadow: 0 4px 0 #2563eb;" onclick="checkFITB()">Submit Entry</button>
+        <!-- Answer Action Area -->
+        <div id="controls-container" class="dual-controls-wrapper">
+            <!-- Dynamically populated per mode -->
         </div>
+        
         <div id="feedback-area"></div>
         <button class="action-btn" style="background:#64748b; box-shadow:0 4px 0 #475569; margin-top:15px; font-size:13px; padding:10px;" onclick="exitGame()">Exit Match</button>
     </div>
-
+    
     <!-- End Screen -->
     <div id="end-screen" class="screen" style="text-align: center;">
         <h2 style="color:#f8fafc; font-size: 28px; margin-top: 10px;">🏆 Match Result</h2>
@@ -230,17 +238,17 @@
         </div>
         
         <div class="q-card" style="margin: 20px 0; text-align: left;">
-            <h4 style="margin-top:0; color:#a5b4fc;">Record Victory to Google Sheet Leaderboard</h4>
+            <h4 style="margin-top:0; color:#a5b4fc;">Record Victory to Leaderboard</h4>
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <input type="text" id="player-class" placeholder="Class (e.g. 2A)" maxlength="3" style="width:40%; text-transform:uppercase;">
                 <input type="number" id="player-class-num" placeholder="No." style="width:60%; margin-bottom:0;" min="1" max="50">
             </div>
             <input type="text" id="winner-name-input" placeholder="Winner Name" maxlength="20">
-            <button class="action-btn" id="submit-btn" onclick="submitScore()">Transmit Victory Score</button>
+            <button class="action-btn" id="submit-btn" onclick="submitScore()">Transmit Score</button>
         </div>
         <button class="action-btn" style="background:#64748b; box-shadow: 0 4px 0 #475569;" onclick="showStart()">Return to Main Menu</button>
     </div>
-
+    
     <!-- Leaderboard Screen -->
     <div id="leaderboard-screen" class="screen">
         <h2 style="text-align:center; color:#f59e0b; margin-top:0;">🏆 Top Measurement Engineers</h2>
@@ -258,17 +266,19 @@
     let p1HP = 100, p2HP = 100;
     let p1Streak = 0, p2Streak = 0;
     let p1Score = 0, p2Score = 0;
-    let activePlayer = 1; // 1 or 2
-    let playerRole = 1; // 1 for Host/Local, 2 for Remote Joiner
-    let timeLeft = 90, timerInterval = null, gameActive = false, currentAns = "", board = null;
+    let playerRole = 1; // 1 for Host/Local P1, 2 for Remote Joiner/P2
     
-    // PeerJS Multi-Device WebRTC Variables
+    let timeLeft = 90, timerInterval = null, gameActive = false;
+    let currentQuestion = null;
+    let currentQIndex = 0;
+    let p1Locked = false, p2Locked = false;
+    let roundDecided = false;
+    let botTimer = null;
+    let board = null;
+    
+    // PeerJS WebRTC Networking
     let peer = null, conn = null, roomCode = "";
-
-    document.getElementById('fitb-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') checkFITB();
-    });
-
+    
     function selectMode(mode) {
         selectedGameMode = mode;
         document.getElementById('mode-online').classList.toggle('selected', mode === 'online');
@@ -279,33 +289,27 @@
         document.getElementById('online-panel').style.display = (mode === 'online') ? 'block' : 'none';
         document.getElementById('launch-btn').style.display = (mode !== 'online') ? 'block' : 'none';
     }
-
-    // --- PeerJS Multi-Device WebRTC Networking ---
+    
+    // --- PeerJS WebRTC Setup ---
     function initPeer(customId = null) {
         if (peer) peer.destroy();
         peer = customId ? new Peer(customId) : new Peer();
         
-        peer.on('open', (id) => {
-            console.log("PeerJS Connected ID:", id);
-        });
-
+        peer.on('open', (id) => { console.log("PeerJS Connected ID:", id); });
         peer.on('connection', (c) => {
             conn = c;
             playerRole = 1; // Host is Player 1
             setupConnectionListeners();
-            document.getElementById('host-status').innerHTML = "⚡ OPPONENT CONNECTED! STARTING...";
+            document.getElementById('host-status').innerHTML = "⚡ OPPONENT CONNECTED! LAUNCHING...";
             setTimeout(() => {
                 p1Name = document.getElementById('p1-name-input').value.trim() || "Player 1";
                 conn.send({ type: 'INIT_GAME', p1Name: p1Name });
                 startGame();
             }, 1000);
         });
-
-        peer.on('error', (err) => {
-            alert("Network Error: " + err.type + ". Please re-try room creation.");
-        });
+        peer.on('error', (err) => { alert("Network Error: " + err.type); });
     }
-
+    
     function createRoom() {
         roomCode = Math.floor(1000 + Math.random() * 9000).toString();
         document.getElementById('display-room-code').innerText = roomCode;
@@ -313,15 +317,15 @@
         document.getElementById('join-ui').style.display = 'none';
         initPeer("mm-battle-" + roomCode);
     }
-
+    
     function showJoinUI() {
         document.getElementById('host-ui').style.display = 'none';
         document.getElementById('join-ui').style.display = 'block';
     }
-
+    
     function joinRoom() {
         const inputCode = document.getElementById('join-code-input').value.trim();
-        if (inputCode.length !== 4) { alert("Please enter a valid 4-digit room code!"); return; }
+        if (inputCode.length !== 4) { alert("Please enter a 4-digit room code!"); return; }
         
         playerRole = 2; // Joiner is Player 2
         p2Name = document.getElementById('p1-name-input').value.trim() || "Player 2";
@@ -332,26 +336,33 @@
             setupConnectionListeners();
         });
     }
-
+    
     function setupConnectionListeners() {
         conn.on('open', () => {
-            if (playerRole === 2) {
-                conn.send({ type: 'JOIN_NAME', name: p2Name });
-            }
+            if (playerRole === 2) conn.send({ type: 'JOIN_NAME', name: p2Name });
         });
-
         conn.on('data', (data) => {
             if (data.type === 'JOIN_NAME') {
                 p2Name = data.name;
             } else if (data.type === 'INIT_GAME') {
                 p1Name = data.p1Name;
                 startGame();
-            } else if (data.type === 'ACTION_PERFORMED') {
-                handleRemoteAction(data);
+            } else if (data.type === 'NEW_QUESTION') {
+                currentQuestion = data.qData;
+                currentQIndex = data.qIndex;
+                renderQuestionUI();
+            } else if (data.type === 'SUBMIT_ANSWER' && playerRole === 1) {
+                handleHostEvaluateAnswer(data.player, data.selected, data.format, data.qIndex);
+            } else if (data.type === 'ROUND_RESULT') {
+                applyRoundResult(data);
+            } else if (data.type === 'WRONG_ANSWER') {
+                applyWrongAnswer(data);
+            } else if (data.type === 'ROUND_DRAW') {
+                applyRoundDraw(data);
             }
         });
     }
-
+    
     // Math Helpers
     function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function randChoice(arr) { return arr[rand(0, arr.length - 1)]; }
@@ -361,10 +372,9 @@
     }
     function to3SigFig(num) {
         if (num === 0) return "0";
-        let sf = Number(num.toPrecision(3));
-        return sf.toString();
+        return Number(num.toPrecision(3)).toString();
     }
-
+    
     function clearBoard() {
         const box = document.getElementById('jxgbox');
         box.style.display = 'none';
@@ -373,16 +383,16 @@
             board = null;
         }
     }
-
-    // Dynamic Math Question Engine (LaTeX + JSXGraph)
+    
+    // --- 14 Dynamic TeX Math & Scale Question Generators ---
     function generateQuestion() {
-        clearBoard();
         const typePool = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         const type = randChoice(typePool);
         const format = (Math.random() < 0.35 && [1, 2, 6, 7, 8, 9, 10].includes(type)) ? 'fitb' : 'mc'; 
         let qText = "", correct = "", distractors = [];
         let isVisual = false;
-
+        let visualData = null;
+        
         if (type === 1) {
             const items = [
                 { name: "wooden block", unit: "g", scale: randChoice([0.1, 0.2, 0.5, 1, 2, 5, 10]) },
@@ -397,7 +407,7 @@
                 qText = `A measuring tool for a ${item.name} has a scale interval of $${item.scale}\\text{ ${item.unit}}$.<br>Find its maximum absolute error in $\\text{${item.unit}}$.`;
                 correct = `${mae}`;
             } else {
-                qText = `The weight or measure of a ${item.name} is $${meas}\\text{ ${item.unit}}$, correct to the nearest $${item.scale}\\text{ ${item.unit}}$. Find the maximum absolute error.`;
+                qText = `The measurement of a ${item.name} is $${meas}\\text{ ${item.unit}}$, correct to nearest $${item.scale}\\text{ ${item.unit}}$. Find the maximum absolute error.`;
                 correct = `$${mae}\\text{ ${item.unit}}$`;
                 distractors = [`$${item.scale}\\text{ ${item.unit}}$`, `$${roundTo(mae * 2, 2)}\\text{ ${item.unit}}$`, `$${roundTo(mae / 2, 3)}\\text{ ${item.unit}}$`];
             }
@@ -421,235 +431,479 @@
                     `$\\text{Lower: } ${roundTo(meas - mae/2, 3)}\\text{ ${unit}}, \\text{ Upper: } ${roundTo(meas + mae/2, 3)}\\text{ ${unit}}$`
                 ];
             }
+        } else if (type === 3) {
+            const meas = roundTo(rand(100, 999) / 10, 1);
+            const mae = 0.05;
+            const lower = round_to(meas - mae, 2);
+            const upper = round_to(meas + mae, 2);
+            const unit = randChoice(["kg", "g", "cm", "m"]);
+            const invalid = upper;
+            qText = `The mass of an object is measured as $${meas}\\text{ ${unit}}$, correct to 3 significant figures. Which of the following CANNOT be the actual mass?`;
+            correct = `$${invalid}\\text{ ${unit}}$`;
+            distractors = [`$${lower}\\text{ ${unit}}$`, `$${meas}\\text{ ${unit}}$`, `$${roundTo(meas + 0.04, 2)}\\text{ ${unit}}$`];
+        } else if (type === 4) {
+            const scale = randChoice([1, 2, 5]);
+            const mae = scale / 2;
+            const meas = -1 * rand(10, 25);
+            const validVal = roundTo(meas + mae / 2, 1);
+            qText = `The temperature of a solution is measured as $${meas}^\\circ\\text{C}$, correct to nearest $${scale}^\\circ\\text{C}$. Which CAN be the actual temperature?`;
+            correct = `$${validVal}^\\circ\\text{C}$`;
+            distractors = [`$${meas - scale}^\\circ\\text{C}$`, `$${meas - mae - 0.5}^\\circ\\text{C}$`, `$${meas + mae + 1}^\\circ\\text{C}$`];
+        } else if (type === 5) {
+            const mae = 0.5;
+            const a = rand(5, 12), b = rand(6, 15), c = rand(7, 18);
+            const minP = roundTo((a - mae) + (b - mae) + (c - mae), 1);
+            const maxP = roundTo((a + mae) + (b + mae) + (c + mae), 1);
+            const validOption = roundTo((minP + maxP) / 2, 1);
+            qText = `The three sides of a triangle are $${a}\\text{ cm}$, $${b}\\text{ cm}$, and $${c}\\text{ cm}$, each measured correct to nearest $\\text{cm}$. Find a possible actual perimeter.`;
+            correct = `$${validOption}\\text{ cm}$`;
+            distractors = [`$${roundTo(minP - 0.5, 1)}\\text{ cm}$`, `$${roundTo(maxP + 0.5, 1)}\\text{ cm}$`, `$${roundTo(maxP + 1.5, 1)}\\text{ cm}$`];
+        } else if (type === 6) {
+            const scale = randChoice([0.1, 0.2, 0.5, 1]);
+            const mae = scale / 2;
+            const meas = roundTo(rand(200, 500) / 10, 1);
+            const relErr = mae / meas;
+            const relErrSig = to3SigFig(relErr);
+            if (format === 'fitb') {
+                qText = `A tile's area is measured as $${meas}\\text{ m}^2$, correct to nearest $${scale}\\text{ m}^2$.<br>Calculate relative error (to 3 sig. fig.).`;
+                correct = `${relErrSig}`;
+            } else {
+                qText = `A tile's area is measured as $${meas}\\text{ m}^2$, correct to nearest $${scale}\\text{ m}^2$. Calculate relative error.`;
+                correct = `$${relErrSig}$`;
+                distractors = [`$${to3SigFig(scale / meas)}$`, `$${to3SigFig(relErr * 100)}$`, `$${to3SigFig(relErr * 2)}$`];
+            }
+        } else if (type === 7) {
+            const meas = roundTo(rand(200, 800) / 10, 1);
+            const mae = 0.05;
+            const pctErr = roundTo((mae / meas) * 100, 3);
+            if (format === 'fitb') {
+                qText = `The temperature of a metal rod is $${meas}^\\circ\\text{C}$, correct to 3 significant figures.<br>Find the percentage error (in $\\%$).`;
+                correct = `${pctErr}`;
+            } else {
+                qText = `The temperature of a metal rod is $${meas}^\\circ\\text{C}$, correct to 3 significant figures. What is the percentage error?`;
+                correct = `$${pctErr}\\%$`;
+                distractors = [`$${roundTo(pctErr / 10, 4)}\\%$`, `$${roundTo(pctErr * 10, 2)}\\%$`, `$${roundTo(pctErr * 2, 3)}\\%$`];
+            }
+        } else if (type === 8) {
+            const meas = rand(45, 95);
+            const actual = roundTo(meas + randChoice([-1.8, -1.2, -0.7, 0.6, 1.4, 2.1]), 2);
+            const absErr = roundTo(Math.abs(meas - actual), 2);
+            const unit = randChoice(["min", "kg", "g", "cm"]);
+            if (format === 'fitb') {
+                qText = `Measured value is $${meas}\\text{ ${unit}}$, actual value is $${actual}\\text{ ${unit}}$.<br>Find the absolute error in $\\text{${unit}}$.`;
+                correct = `${absErr}`;
+            } else {
+                qText = `Measured value is $${meas}\\text{ ${unit}}$, actual value is $${actual}\\text{ ${unit}}$. Find the absolute error.`;
+                correct = `$${absErr}\\text{ ${unit}}$`;
+                distractors = [`$${roundTo(absErr * 2, 2)}\\text{ ${unit}}$`, `$${roundTo(meas + actual, 2)}\\text{ ${unit}}$`, `$${roundTo(absErr / 2, 2)}\\text{ ${unit}}$`];
+            }
+        } else if (type === 9) {
+            const meas = rand(200, 800);
+            const pctErr = randChoice([1, 2, 2.5, 4, 5]);
+            const mae = roundTo(meas * (pctErr / 100), 2);
+            const unit = randChoice(["mL", "g", "cm", "mm"]);
+            if (format === 'fitb') {
+                qText = `A volume of liquid is $${meas}\\text{ ${unit}}$ with percentage error $${pctErr}\\%$.<br>Find the maximum absolute error in $\\text{${unit}}$.`;
+                correct = `${mae}`;
+            } else {
+                qText = `A volume of liquid is $${meas}\\text{ ${unit}}$ with percentage error $${pctErr}\\%$. Find the maximum absolute error.`;
+                correct = `$${mae}\\text{ ${unit}}$`;
+                distractors = [`$${roundTo(mae * 2, 2)}\\text{ ${unit}}$`, `$${roundTo(mae / 2, 2)}\\text{ ${unit}}$`, `$${roundTo(meas * pctErr, 2)}\\text{ ${unit}}$`];
+            }
+        } else if (type === 10) {
+            const length = randChoice([100, 200, 400, 500]);
+            const pctErr = randChoice([0.1, 0.25, 0.5, 1]);
+            const mae = length * (pctErr / 100);
+            const x = roundTo(mae * 2, 2);
+            if (format === 'fitb') {
+                qText = `A line length $${length}\\text{ mm}$ is measured correct to nearest $x\\text{ mm}$. If percentage error is $${pctErr}\\%$, find $x$.`;
+                correct = `${x}`;
+            } else {
+                qText = `A line length $${length}\\text{ mm}$ is measured correct to nearest $x\\text{ mm}$. If percentage error is $${pctErr}\\%$, find $x$.`;
+                correct = `$${x}$`;
+                distractors = [`$${roundTo(x / 2, 2)}$`, `$${roundTo(x * 2, 2)}$`, `$${roundTo(pctErr, 2)}$`];
+            }
+        } else if (type === 11) {
+            const base = rand(12, 20), height = rand(8, 15);
+            const mae = 0.5;
+            const minArea = roundTo((base - mae) * (height - mae), 2);
+            const maxArea = roundTo((base + mae) * (height + mae), 2);
+            qText = `A parallelogram has base $${base}\\text{ cm}$ and height $${height}\\text{ cm}$, both measured correct to nearest $\\text{cm}$. Find the range of actual area $A$.`;
+            correct = `$${minArea}\\text{ cm}^2 \\le A < ${maxArea}\\text{ cm}^2$`;
+            distractors = [
+                `$${minArea}\\text{ cm}^2 < A \\le ${maxArea}\\text{ cm}^2$`,
+                `$${roundTo(base * height - 0.5, 1)}\\text{ cm}^2 \\le A < ${roundTo(base * height + 0.5, 1)}\\text{ cm}^2$`,
+                `$${minArea}\\text{ cm}^2 < A < ${maxArea}\\text{ cm}^2$`
+            ];
+        } else if (type === 12) {
+            const volL = randChoice([2.0, 3.0, 4.0, 5.0]);
+            const scaleVolL = 0.2;
+            const maxVolmL = (volL + scaleVolL / 2) * 1000;
+            const glassmL = 100;
+            const scaleGlassmL = 1;
+            const minGlassmL = glassmL - scaleGlassmL / 2;
+            const maxN = Math.floor(maxVolmL / minGlassmL);
+            qText = `A jug contains $${volL}\\text{ L}$ of juice (nearest $0.2\\text{ L}$). Small glasses have capacity $${glassmL}\\text{ mL}$ (nearest $1\\text{ mL}$). What is the greatest possible number of glasses that can be completely filled?`;
+            correct = `$${maxN}$`;
+            distractors = [`$${maxN - 2}$`, `$${maxN - 1}$`, `$${maxN + 1}$`];
         } else if (type === 13) {
             isVisual = true;
             const majorStep = randChoice([10, 20, 50, 100]);
             const subDivs = randChoice([2, 5, 10]);
             const scaleInterval = majorStep / subDivs;
             const mae = scaleInterval / 2;
-            qText = `Refer to the scale diagram below. What is the maximum absolute error of a reading taken from this instrument?`;
+            visualData = { majorStep: majorStep, subDivs: subDivs };
+            qText = `Refer to the ruler scale diagram below. What is the maximum absolute error of a measurement taken from this instrument?`;
             correct = `$${mae}$`;
-            
             distractors = [`$${scaleInterval}$`, `$${mae / 2}$`, `$${majorStep}$`];
-            
-            setTimeout(() => {
-                const box = document.getElementById('jxgbox');
-                box.style.display = 'block';
-                board = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-1, 3, 11, -1], axis: false, showCopyright: false, showNavigation: false });
-                board.create('line', [[0, 1], [10, 1]], { straightFirst: false, straightLast: false, strokeWidth: 3, strokeColor: '#0f172a' });
-                const totalMajor = 5;
-                const totalSub = totalMajor * subDivs;
-                for (let i = 0; i <= totalSub; i++) {
-                    let xPos = (i / totalSub) * 10;
-                    let isMajor = (i % subDivs === 0);
-                    let h = isMajor ? 0.6 : 0.3;
-                    board.create('segment', [[xPos, 1], [xPos, 1 + h]], { strokeWidth: isMajor ? 2.5 : 1.5, strokeColor: '#0f172a' });
-                    if (isMajor) {
-                        let val = (i / subDivs) * majorStep;
-                        board.create('text', [xPos, 0.4, `\\(${val}\\)`], { fontSize: 13, fixed: true, anchorX: 'middle', useMathJax: true });
-                    }
-                }
-                if (window.MathJax) MathJax.typesetPromise([box]);
-            }, 50);
         } else {
-            const meas = roundTo(rand(200, 800) / 10, 1);
-            const mae = 0.05;
-            const pctErr = roundTo((mae / meas) * 100, 3);
-            qText = `The temperature of a metal rod is measured as $${meas}^\\circ\\text{C}$, correct to 3 significant figures. What is the percentage error?`;
-            correct = `$${pctErr}\\%$`;
-            distractors = [`$${roundTo(pctErr / 10, 4)}\\%$`, `$${roundTo(pctErr * 10, 2)}\\%$`, `$${roundTo(pctErr * 2, 3)}\\%$`];
+            qText = `Which of the following measurements has a maximum absolute error of $0.5\\text{ cm}$?<br>I. $12\\text{ cm}$ correct to nearest $\\text{cm}$<br>II. $14.0\\text{ cm}$ correct to 3 significant figures<br>III. Range of actual length is $15.5\\text{ cm} \\le L < 16.5\\text{ cm}$`;
+            correct = `$\\text{I, II and III}$`;
+            distractors = [`$\\text{I and II only}$`, `$\\text{II and III only}$`, `$\\text{I only}$`];
         }
-
+        
         let o = [];
         if (format === 'mc') {
             let optionsSet = new Set([correct, ...distractors]);
             o = Array.from(optionsSet).sort(() => Math.random() - 0.5);
         }
-        return { q: qText, a: correct, format: format, o: o, isVisual: isVisual };
+        
+        return { q: qText, a: correct, format: format, o: o, isVisual: isVisual, visualData: visualData };
     }
-
+    
+    function drawJSXGraphScale(visualData) {
+        const box = document.getElementById('jxgbox');
+        box.style.display = 'block';
+        if (board) JXG.JSXGraph.freeBoard(board);
+        
+        board = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-1, 3, 11, -1], axis: false, showCopyright: false, showNavigation: false });
+        board.create('line', [[0, 1], [10, 1]], { straightFirst: false, straightLast: false, strokeWidth: 3, strokeColor: '#0f172a' });
+        
+        const majorStep = visualData.majorStep;
+        const subDivs = visualData.subDivs;
+        const totalMajor = 5;
+        const totalSub = totalMajor * subDivs;
+        
+        for (let i = 0; i <= totalSub; i++) {
+            let xPos = (i / totalSub) * 10;
+            let isMajor = (i % subDivs === 0);
+            let h = isMajor ? 0.6 : 0.3;
+            board.create('segment', [[xPos, 1], [xPos, 1 + h]], { strokeWidth: isMajor ? 2.5 : 1.5, strokeColor: '#0f172a' });
+            if (isMajor) {
+                let val = (i / subDivs) * majorStep;
+                board.create('text', [xPos, 0.4, `\\(${val}\\)`], { fontSize: 13, fixed: true, anchorX: 'middle', useMathJax: true });
+            }
+        }
+        if (window.MathJax) MathJax.typesetPromise([box]);
+    }
+    
+    // --- Screen & HUD Navigation ---
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active'); 
         window.scrollTo(0,0);
     }
-
+    
     function showStart() { 
         clearBoard();
         showScreen('start-screen'); 
         if(window.MathJax) MathJax.typesetPromise(); 
     }
-
+    
     function exitGame() {
         gameActive = false;
         clearInterval(timerInterval);
+        if (botTimer) clearTimeout(botTimer);
         clearBoard();
         showStart();
     }
-
+    
     function updateHUD() {
         document.getElementById('p1-hp-bar').style.width = `${p1HP}%`;
         document.getElementById('p2-hp-bar').style.width = `${p2HP}%`;
         document.getElementById('p1-streak-display').innerText = `Streak: ${p1Streak}x`;
         document.getElementById('p2-streak-display').innerText = `Streak: ${p2Streak}x`;
-        
-        const banner = document.getElementById('turn-banner');
-        if (selectedGameMode !== 'solo') {
-            banner.style.display = 'block';
-            if (activePlayer === 1) {
-                banner.className = "turn-banner p1-turn";
-                banner.innerText = `⚔️ ${p1Name}'s Turn to Attack!`;
-            } else {
-                banner.className = "turn-banner p2-turn";
-                banner.innerText = `⚔️ ${p2Name}'s Turn to Attack!`;
-            }
-        } else {
-            banner.style.display = 'none';
-        }
     }
-
+    
     function startGame() {
         p1HP = 100; p2HP = 100;
         p1Streak = 0; p2Streak = 0;
         p1Score = 0; p2Score = 0;
-        activePlayer = 1;
+        currentQIndex = 0;
         timeLeft = 90;
         
         document.getElementById('p1-name-display').innerText = p1Name;
-        document.getElementById('p2-name-display').innerText = (selectedGameMode === 'solo') ? "SOLO BOT" : p2Name;
+        document.getElementById('p2-name-display').innerText = (selectedGameMode === 'solo') ? "BOT AI" : p2Name;
         document.getElementById('timer').innerText = timeLeft;
         updateHUD();
         gameActive = true; 
         showScreen('game-screen');
         
-        setTimeout(() => {
-            renderNextQuestion();
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if(!gameActive) return;
-                timeLeft--; 
-                document.getElementById('timer').innerText = timeLeft;
-                if(timeLeft <= 0) endGame();
-            }, 1000);
-        }, 50);
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if(!gameActive) return;
+            timeLeft--; 
+            document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) endGame();
+        }, 1000);
+        
+        nextQuestionRound();
     }
-
-    function renderNextQuestion() {
-        if(!gameActive) return;
+    
+    function nextQuestionRound() {
+        if (!gameActive) return;
+        currentQIndex++;
+        p1Locked = false;
+        p2Locked = false;
+        roundDecided = false;
         document.getElementById('feedback-area').innerHTML = "";
-        const qData = generateQuestion();
-        currentAns = qData.a;
-        document.getElementById('question-text').innerHTML = qData.q;
         
-        const area = document.getElementById('options-area');
-        const fitbArea = document.getElementById('fitb-area');
-        area.innerHTML = "";
-        
-        const isMyTurn = (selectedGameMode !== 'online') || (activePlayer === playerRole);
-
-        if (qData.format === 'mc') {
-            area.style.display = "grid";
-            fitbArea.style.display = "none";
-            qData.o.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = "opt-btn"; 
-                btn.innerHTML = opt;
-                btn.disabled = !isMyTurn;
-                btn.onclick = () => checkAnswer(opt, btn, 'mc');
-                area.appendChild(btn);
-            });
+        if (selectedGameMode === 'online') {
+            if (playerRole === 1) { // Host generates and broadcasts
+                currentQuestion = generateQuestion();
+                conn.send({ type: 'NEW_QUESTION', qData: currentQuestion, qIndex: currentQIndex });
+                renderQuestionUI();
+            }
         } else {
-            area.style.display = "none";
-            fitbArea.style.display = "block";
-            const input = document.getElementById('fitb-input');
-            input.value = "";
-            input.disabled = !isMyTurn;
-            input.style.borderColor = "#475569";
-            if (isMyTurn) input.focus();
+            currentQuestion = generateQuestion();
+            renderQuestionUI();
+            
+            if (selectedGameMode === 'solo') {
+                // Schedule Solo Bot Answer simulation (random 4s-8s)
+                if (botTimer) clearTimeout(botTimer);
+                botTimer = setTimeout(() => {
+                    if (gameActive && !roundDecided && !p2Locked) {
+                        let botIsCorrect = Math.random() < 0.65;
+                        handleHostEvaluateAnswer(2, botIsCorrect ? currentQuestion.a : "0", currentQuestion.format, currentQIndex);
+                    }
+                }, rand(4000, 7500));
+            }
+        }
+    }
+    
+    function renderQuestionUI() {
+        clearBoard();
+        document.getElementById('question-text').innerHTML = currentQuestion.q;
+        
+        if (currentQuestion.isVisual && currentQuestion.visualData) {
+            setTimeout(() => drawJSXGraphScale(currentQuestion.visualData), 50);
+        }
+        
+        const controls = document.getElementById('controls-container');
+        controls.innerHTML = "";
+        
+        if (selectedGameMode === 'duel') {
+            // Local Split-Control Layout (P1 Red vs P2 Blue)
+            const grid = document.createElement('div');
+            grid.className = "local-dual-grid";
+            
+            const p1Panel = createPlayerPanel(1, p1Name, "p1-panel", "p1-color");
+            const p2Panel = createPlayerPanel(2, p2Name, "p2-panel", "p2-color");
+            
+            grid.appendChild(p1Panel);
+            grid.appendChild(p2Panel);
+            controls.appendChild(grid);
+        } else {
+            // Online or Solo Single Control Pad
+            const panel = createPlayerPanel(playerRole, (playerRole === 1 ? p1Name : p2Name), "p1-panel", "p1-color");
+            controls.appendChild(panel);
         }
         
         if(window.MathJax) {
-            MathJax.typesetPromise([document.getElementById('question-text'), document.getElementById('options-area')]);
+            MathJax.typesetPromise([document.getElementById('question-text'), controls]);
         }
     }
-
-    function checkFITB() {
-        if(!gameActive) return;
-        const val = document.getElementById('fitb-input').value.trim();
-        if(val === "") return;
-        checkAnswer(val, document.getElementById('fitb-input'), 'fitb');
-    }
-
-    function checkAnswer(selected, element, format) {
-        if(!gameActive) return;
-        gameActive = false;
+    
+    function createPlayerPanel(pNum, name, panelClass, colorClass) {
+        const panel = document.createElement('div');
+        panel.className = `player-control-panel ${panelClass}`;
         
-        let isCorrect = (format === 'mc') ? (selected === currentAns) : (Math.abs(parseFloat(selected) - parseFloat(currentAns)) < 0.001);
+        const title = document.createElement('div');
+        title.className = `panel-title ${colorClass}`;
+        title.innerText = `⚔️ ${name}'s Response`;
+        panel.appendChild(title);
         
-        if (selectedGameMode === 'online' && conn) {
-            conn.send({
-                type: 'ACTION_PERFORMED',
-                player: playerRole,
-                isCorrect: isCorrect,
-                selected: selected,
-                format: format
+        if (currentQuestion.format === 'mc') {
+            const grid = document.createElement('div');
+            grid.className = "options-grid";
+            currentQuestion.o.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "opt-btn";
+                btn.innerHTML = opt;
+                btn.id = `btn-p${pNum}-${opt.replace(/[^a-zA-Z0-9]/g, '')}`;
+                btn.onclick = () => submitPlayerAnswer(pNum, opt, 'mc');
+                grid.appendChild(btn);
             });
+            panel.appendChild(grid);
+        } else {
+            const fitbBox = document.createElement('div');
+            fitbBox.className = "fitb-box";
+            
+            const input = document.createElement('input');
+            input.type = "number";
+            input.step = "any";
+            input.className = "fitb-input";
+            input.placeholder = "Value...";
+            input.id = `fitb-p${pNum}`;
+            input.onkeypress = (e) => { if(e.key === 'Enter') submitPlayerAnswer(pNum, input.value, 'fitb'); };
+            
+            const subBtn = document.createElement('button');
+            subBtn.className = "action-btn";
+            subBtn.innerText = "SUBMIT";
+            subBtn.style.margin = "0";
+            subBtn.onclick = () => submitPlayerAnswer(pNum, input.value, 'fitb');
+            
+            fitbBox.appendChild(input);
+            fitbBox.appendChild(subBtn);
+            panel.appendChild(fitbBox);
         }
-
-        processTurnOutcome(activePlayer, isCorrect, selected, format);
+        return panel;
     }
-
-    function handleRemoteAction(data) {
-        processTurnOutcome(data.player, data.isCorrect, data.selected, data.format);
+    
+    function submitPlayerAnswer(playerNum, selectedVal, format) {
+        if (!gameActive || roundDecided) return;
+        if ((playerNum === 1 && p1Locked) || (playerNum === 2 && p2Locked)) return;
+        if (selectedVal === "" || selectedVal === undefined) return;
+        
+        if (selectedGameMode === 'online') {
+            if (playerRole === 1) {
+                handleHostEvaluateAnswer(1, selectedVal, format, currentQIndex);
+            } else {
+                // Lock joiner local UI immediately
+                p2Locked = true;
+                conn.send({ type: 'SUBMIT_ANSWER', player: 2, selected: selectedVal, format: format, qIndex: currentQIndex });
+            }
+        } else {
+            handleHostEvaluateAnswer(playerNum, selectedVal, format, currentQIndex);
+        }
     }
-
-    function processTurnOutcome(attackerNum, isCorrect, selected, format) {
-        const feedback = document.getElementById('feedback-area');
-        const attackerName = (attackerNum === 1) ? p1Name : p2Name;
-
+    
+    // --- Central Host Decision Engine ---
+    function handleHostEvaluateAnswer(playerNum, selectedVal, format, qIndex) {
+        if (!gameActive || roundDecided || qIndex !== currentQIndex) return;
+        
+        let targetAns = currentQuestion.a;
+        let isCorrect = false;
+        if (format === 'mc') {
+            isCorrect = (selectedVal === targetAns);
+        } else {
+            isCorrect = (Math.abs(parseFloat(selectedVal) - parseFloat(targetAns)) < 0.001);
+        }
+        
         if (isCorrect) {
-            let streak = (attackerNum === 1) ? ++p1Streak : ++p2Streak;
+            roundDecided = true;
+            let streak = (playerNum === 1) ? ++p1Streak : ++p2Streak;
             let damage = 20 + (streak * 5);
             
-            if (attackerNum === 1) {
+            if (playerNum === 1) {
                 p2HP = Math.max(0, p2HP - damage);
                 p1Score += 150 + (streak * 20);
             } else {
                 p1HP = Math.max(0, p1HP - damage);
                 p2Score += 150 + (streak * 20);
             }
-            feedback.innerHTML = `<span style="color:#10b981;">⚡ CRITICAL HIT! ${attackerName} dealt -${damage} HP!</span>`;
-        } else {
-            if (attackerNum === 1) { p1Streak = 0; p1HP = Math.max(0, p1HP - 10); }
-            else { p2Streak = 0; p2HP = Math.max(0, p2HP - 10); }
             
-            feedback.innerHTML = `<span style="color:#ef4444;">💥 ERROR! ${attackerName} suffered -10 HP recoil!</span><br><span style="font-size: 14px; color:#94a3b8;">Target: ${currentAns}</span>`;
-            if(window.MathJax) MathJax.typesetPromise([feedback]);
-        }
-
-        updateHUD();
-
-        if (p1HP <= 0 || p2HP <= 0) {
-            setTimeout(endGame, 1200);
-            return;
-        }
-
-        setTimeout(() => {
-            if (timeLeft > 0) {
-                if (selectedGameMode !== 'solo') activePlayer = (activePlayer === 1) ? 2 : 1;
-                updateHUD();
-                gameActive = true;
-                renderNextQuestion();
+            const payload = {
+                type: 'ROUND_RESULT',
+                winner: playerNum,
+                damage: damage,
+                p1HP: p1HP, p2HP: p2HP,
+                p1Streak: p1Streak, p2Streak: p2Streak,
+                p1Score: p1Score, p2Score: p2Score,
+                ans: targetAns
+            };
+            
+            if (selectedGameMode === 'online' && conn) conn.send(payload);
+            applyRoundResult(payload);
+        } else {
+            // Wrong answer recoil
+            if (playerNum === 1) { p1Streak = 0; p1HP = Math.max(0, p1HP - 10); p1Locked = true; }
+            else { p2Streak = 0; p2HP = Math.max(0, p2HP - 10); p2Locked = true; }
+            
+            const payload = {
+                type: 'WRONG_ANSWER',
+                player: playerNum,
+                p1HP: p1HP, p2HP: p2HP,
+                p1Streak: p1Streak, p2Streak: p2Streak
+            };
+            
+            if (selectedGameMode === 'online' && conn) conn.send(payload);
+            applyWrongAnswer(payload);
+            
+            // Check if BOTH players locked out
+            if (p1Locked && p2Locked && !roundDecided) {
+                roundDecided = true;
+                const drawPayload = { type: 'ROUND_DRAW', ans: targetAns };
+                if (selectedGameMode === 'online' && conn) conn.send(drawPayload);
+                applyRoundDraw(drawPayload);
             }
-        }, 1500);
+        }
     }
-
+    
+    function applyRoundResult(data) {
+        p1HP = data.p1HP; p2HP = data.p2HP;
+        p1Streak = data.p1Streak; p2Streak = data.p2Streak;
+        p1Score = data.p1Score; p2Score = data.p2Score;
+        updateHUD();
+        
+        const winnerName = (data.winner === 1) ? p1Name : p2Name;
+        const feedback = document.getElementById('feedback-area');
+        feedback.innerHTML = `<span style="color:#10b981;">⚡ CRITICAL SPEED STRIKE! ${winnerName} answered first and dealt -${data.damage} HP!</span>`;
+        
+        disableAllInputs();
+        
+        if (p1HP <= 0 || p2HP <= 0) {
+            setTimeout(endGame, 1500);
+        } else {
+            setTimeout(nextQuestionRound, 1800);
+        }
+    }
+    
+    function applyWrongAnswer(data) {
+        p1HP = data.p1HP; p2HP = data.p2HP;
+        p1Streak = data.p1Streak; p2Streak = data.p2Streak;
+        updateHUD();
+        
+        const wrongName = (data.player === 1) ? p1Name : p2Name;
+        const feedback = document.getElementById('feedback-area');
+        feedback.innerHTML = `<span style="color:#ef4444;">💥 RECOIL! ${wrongName} answered incorrectly (-10 HP)! Opponent can still strike!</span>`;
+        
+        if (data.player === 1) p1Locked = true;
+        if (data.player === 2) p2Locked = true;
+        
+        disablePlayerPanelInputs(data.player);
+        
+        if (p1HP <= 0 || p2HP <= 0) setTimeout(endGame, 1500);
+    }
+    
+    function applyRoundDraw(data) {
+        const feedback = document.getElementById('feedback-area');
+        feedback.innerHTML = `<span style="color:#f59e0b;">⚠️ BOTH MISSED! Correct Answer: ${data.ans}</span>`;
+        if(window.MathJax) MathJax.typesetPromise([feedback]);
+        
+        disableAllInputs();
+        setTimeout(nextQuestionRound, 1800);
+    }
+    
+    function disablePlayerPanelInputs(pNum) {
+        document.querySelectorAll(`#controls-container .opt-btn`).forEach(btn => {
+            if (btn.id.startsWith(`btn-p${pNum}`)) btn.disabled = true;
+        });
+        const fitb = document.getElementById(`fitb-p${pNum}`);
+        if (fitb) fitb.disabled = true;
+    }
+    
+    function disableAllInputs() {
+        document.querySelectorAll('#controls-container button, #controls-container input').forEach(el => el.disabled = true);
+    }
+    
     function endGame() {
         gameActive = false; 
         clearInterval(timerInterval);
+        if (botTimer) clearTimeout(botTimer);
         clearBoard();
-        let winnerTitle = "", finalWinnerName = "";
         
+        let winnerTitle = "", finalWinnerName = "";
         if (p1HP > p2HP) {
             winnerTitle = `🏆 ${p1Name.toUpperCase()} DEFEATS ${p2Name.toUpperCase()}!`;
             finalWinnerName = p1Name;
@@ -660,19 +914,20 @@
             winnerTitle = "🤝 MATCH DRAW!";
             finalWinnerName = p1Name;
         }
-
+        
         document.getElementById('victory-banner').innerText = winnerTitle; 
         document.getElementById('winner-name-input').value = finalWinnerName;
         showScreen('end-screen');
     }
-
+    
+    // --- Google Sheets Leaderboard Transmitter & Fetcher ---
     function submitScore() {
         let className = document.getElementById('player-class').value.trim().toUpperCase();
         const classNum = document.getElementById('player-class-num').value;
         const name = document.getElementById('winner-name-input').value.trim();
         
         if (!/^\d[A-Z]$/.test(className) || !classNum || classNum < 1 || classNum > 50 || !name) {
-            alert("Validation Error. Ensure class format (e.g. 2A), student number (1-50), and name are valid."); return;
+            alert("Validation Error: Ensure Class format (e.g. 2A), student number (1-50), and name are valid."); return;
         }
         
         const btn = document.getElementById('submit-btn');
@@ -683,13 +938,13 @@
             className: className, classNum: classNum, name: name,
             score: Math.max(p1Score, p2Score)
         };
-
+        
         const url = `${SCRIPT_URL}?gameId=${encodeURIComponent(GAME_ID)}&gameName=${encodeURIComponent(GAME_ID)}&game=${encodeURIComponent(GAME_ID)}`;
         fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) })
         .then(() => { alert("Victory score logged to Google Sheet Leaderboard!"); fetchLeaderboard(); })
-        .catch(() => { alert("Transmission failed. Re-try submission."); btn.innerText = "Transmit Score"; btn.disabled = false; });
+        .catch(() => { alert("Transmission failed. Please re-try."); btn.innerText = "Transmit Score"; btn.disabled = false; });
     }
-
+    
     function fetchLeaderboard() {
         showScreen('leaderboard-screen');
         const content = document.getElementById('lb-content');
