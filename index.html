@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Measurement Master: Error Analytics BATTLE PRO</title>
+    <title>Measurement Master: Error Analytics BATTLE PRO (Multi-Device)</title>
     
     <!-- MathJax for rendering LaTeX math -->
     <script>
@@ -18,6 +18,9 @@
     <script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
     
+    <!-- PeerJS for Cross-Device WebRTC Multiplayer Battles -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
@@ -31,7 +34,7 @@
         }
         
         .header { background: linear-gradient(135deg, #1e1b4b, #311b92); color: white; padding: 20px; text-align: center; position: relative; border-bottom: 3px solid #6366f1; }
-        .header h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
         .sub-header { font-size: 13px; color: #a5b4fc; margin-top: 5px; font-weight: 600; }
         
         .screen { display: none; padding: 20px; flex-grow: 1; }
@@ -57,7 +60,7 @@
         .streak-badge { font-size: 11px; font-weight: 800; margin-top: 4px; color: #fbbf24; }
         .vs-circle { text-align: center; font-weight: 900; font-size: 14px; color: #f59e0b; background: #0f172a; border-radius: 50%; padding: 8px; border: 2px solid #f59e0b; }
         .timer-display { text-align: center; font-size: 13px; font-weight: 800; color: #94a3b8; margin-top: 4px; }
-
+        
         .turn-banner {
             text-align: center; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 15px; margin-bottom: 15px;
             letter-spacing: 0.5px; animation: pulse 1.5s infinite alternate;
@@ -65,15 +68,14 @@
         .p1-turn { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
         .p2-turn { background: rgba(6, 182, 212, 0.2); color: #06b6d4; border: 1px solid #06b6d4; }
         @keyframes pulse { from { opacity: 0.8; } to { opacity: 1; } }
-
+        
         .q-card {
             background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-align: center; border: 1px solid #334155; font-size: 16px; font-weight: 600; line-height: 1.6; color: #f8fafc;
         }
         #jxgbox {
             width: 100%; height: 210px; margin: 15px auto; border-radius: 10px;
-            border: 1px solid #475569; overflow: hidden; background-color: #ffffff;
-            display: none;
+            border: 1px solid #475569; overflow: hidden; background-color: #ffffff; display: none;
         }
         
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
@@ -107,55 +109,79 @@
         th { text-align: left; background: #334155; color: #94a3b8; padding: 12px; font-size: 12px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #334155; font-weight: 600; color: #f1f5f9; }
         
-        .mode-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .mode-card { background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .mode-select-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .mode-card { background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: 0.2s; }
         .mode-card.selected { border-color: #6366f1; background: rgba(99, 102, 241, 0.15); }
-        .mode-card h4 { margin: 0 0 5px 0; color: #f8fafc; font-size: 16px; }
-        .mode-card p { margin: 0; font-size: 12px; color: #94a3b8; }
+        .mode-card h4 { margin: 0 0 5px 0; color: #f8fafc; font-size: 14px; }
+        .mode-card p { margin: 0; font-size: 11px; color: #94a3b8; }
+
+        .room-panel { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 15px; text-align: center; }
+        .room-code-badge { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #38bdf8; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px dashed #38bdf8; display: inline-block; margin: 10px 0; }
     </style>
 </head>
 <body>
 <div id="game-container">
     <div class="header">
-        <h1>Measurement Master <span style="color:#f59e0b">BATTLE EDITION</span></h1>
-        <div class="sub-header">$\text{1v1 Math Arena: Precision, Errors \& Limits}$</div>
+        <h1>Measurement Master <span style="color:#f59e0b">BATTLE PRO</span></h1>
+        <div class="sub-header">$\text{1v1 Multi-Device Online Arena: Precision \& Error Analytics}$</div>
     </div>
 
     <!-- Start Screen -->
     <div id="start-screen" class="screen active">
         <div class="q-card" style="margin-bottom: 15px; text-align: left;">
-            <h3 style="margin-top:0; color:#f8fafc;">⚔️ Battle Rules</h3>
-            <ul style="color:#cbd5e1; line-height: 1.8; padding-left: 20px; font-size: 14px; margin-bottom: 0;">
-                <li><strong>Turn-Based Speed Duel:</strong> Players take turns solving measurement error problems.</li>
-                <li><strong>Damage Mechanics:</strong> Correct answers deal $20\text{ HP}$ base damage (+ Streak bonus!).</li>
-                <li><strong>Recoil Error:</strong> Incorrect responses cause $-10\text{ HP}$ self-damage and lose streak.</li>
-                <li><strong>Math Standards:</strong> Fully embedded with LaTeX formulas and dynamic JSXGraph scale diagrams.</li>
+            <h3 style="margin-top:0; color:#f8fafc;">⚔️ Arena Rules & Mechanics</h3>
+            <ul style="color:#cbd5e1; line-height: 1.8; padding-left: 20px; font-size: 13px; margin-bottom: 0;">
+                <li><strong>Cross-Device Online Duels:</strong> Battle opponents on separate phones, tablets, or PCs in real-time.</li>
+                <li><strong>Base Damage:</strong> Correct responses deal $20\text{ HP}$ base damage (+ Streak multipliers!).</li>
+                <li><strong>Recoil Error:</strong> Incorrect answers trigger $-10\text{ HP}$ self-damage and reset streak.</li>
+                <li><strong>TeX Rigor:</strong> Questions feature LaTeX math formulas and dynamic JSXGraph scale diagrams.</li>
             </ul>
         </div>
 
         <div style="margin-bottom: 15px;">
-            <label style="font-size: 13px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 8px;">SELECT BATTLE MODE</label>
+            <label style="font-size: 12px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 8px;">SELECT BATTLE MODE</label>
             <div class="mode-select-grid">
-                <div class="mode-card selected" id="mode-duel" onclick="selectMode('duel')">
-                    <h4>⚔️ 1v1 Local Duel</h4>
-                    <p>Player 1 vs Player 2 turn-based speed battle</p>
+                <div class="mode-card selected" id="mode-online" onclick="selectMode('online')">
+                    <h4>🌐 Online 1v1</h4>
+                    <p>Cross-device room duel</p>
+                </div>
+                <div class="mode-card" id="mode-duel" onclick="selectMode('duel')">
+                    <h4>⚔️ Local Duel</h4>
+                    <p>Pass & play same device</p>
                 </div>
                 <div class="mode-card" id="mode-solo" onclick="selectMode('solo')">
                     <h4>🎯 Solo Diagnostic</h4>
-                    <p>100s Speed run mode for single player</p>
+                    <p>Time attack mode</p>
                 </div>
             </div>
         </div>
 
         <div id="player-inputs" style="background:#1e293b; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155;">
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="p1-name-input" placeholder="Player 1 Name (Red)" value="Player 1" maxlength="15">
-                <input type="text" id="p2-name-input" placeholder="Player 2 Name (Blue)" value="Player 2" maxlength="15">
+            <input type="text" id="p1-name-input" placeholder="Your Name" value="Player 1" maxlength="15">
+            <input type="text" id="p2-name-input" placeholder="Opponent Name (Local)" value="Player 2" maxlength="15" style="display:none;">
+        </div>
+
+        <!-- Online Room Setup Panel -->
+        <div id="online-panel" class="room-panel">
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <button class="action-btn" style="background:#38bdf8; box-shadow: 0 4px 0 #0284c7; margin:0;" onclick="createRoom()">Create Host Room</button>
+                <button class="action-btn" style="background:#a855f7; box-shadow: 0 4px 0 #7e22ce; margin:0;" onclick="showJoinUI()">Join Room Code</button>
+            </div>
+            
+            <div id="host-ui" style="display:none;">
+                <span style="font-size:12px; color:#94a3b8;">SHARE THIS ROOM CODE WITH YOUR OPPONENT:</span><br>
+                <div class="room-code-badge" id="display-room-code">----</div><br>
+                <span style="font-size:13px; color:#f59e0b; font-weight:bold;" id="host-status">Waiting for Opponent to Connect...</span>
+            </div>
+
+            <div id="join-ui" style="display:none;">
+                <input type="text" id="join-code-input" placeholder="Enter 4-Digit Code (e.g. 7842)" maxlength="4" style="text-transform:uppercase;">
+                <button class="action-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857;" onclick="joinRoom()">Connect & Start Battle</button>
             </div>
         </div>
 
-        <button class="action-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857;" onclick="startGame()">▶ Launch Battle Arena</button>
-        <button class="action-btn" style="background:#3b82f6; box-shadow: 0 4px 0 #2563eb;" onclick="fetchLeaderboard()">🏆 View Leaderboard</button>
+        <button class="action-btn" id="launch-btn" style="background:#10b981; box-shadow: 0 4px 0 #047857; display:none;" onclick="startGame()">▶ Launch Battle Arena</button>
+        <button class="action-btn" style="background:#3b82f6; box-shadow: 0 4px 0 #2563eb;" onclick="fetchLeaderboard()">🏆 Access Global Leaderboard</button>
     </div>
 
     <!-- Game Screen -->
@@ -178,7 +204,7 @@
                 <div class="streak-badge" id="p2-streak-display">Streak: 0x</div>
             </div>
         </div>
-
+        
         <div id="turn-banner" class="turn-banner p1-turn">Player 1's Turn to Attack!</div>
         
         <div class="q-card">
@@ -199,12 +225,12 @@
     <!-- End Screen -->
     <div id="end-screen" class="screen" style="text-align: center;">
         <h2 style="color:#f8fafc; font-size: 28px; margin-top: 10px;">🏆 Match Result</h2>
-        <div id="victory-banner" style="font-size: 28px; color: #f59e0b; font-weight: 900; margin: 15px 0;">
+        <div id="victory-banner" style="font-size: 26px; color: #f59e0b; font-weight: 900; margin: 15px 0;">
             PLAYER 1 VICTORY!
         </div>
         
         <div class="q-card" style="margin: 20px 0; text-align: left;">
-            <h4 style="margin-top:0; color:#a5b4fc;">Record Winner to Global Leaderboard</h4>
+            <h4 style="margin-top:0; color:#a5b4fc;">Record Victory to Google Sheet Leaderboard</h4>
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <input type="text" id="player-class" placeholder="Class (e.g. 2A)" maxlength="3" style="width:40%; text-transform:uppercase;">
                 <input type="number" id="player-class-num" placeholder="No." style="width:60%; margin-bottom:0;" min="1" max="50">
@@ -227,13 +253,17 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxqqqYRcv23BkPQb1jj8TzBVDyn6dsAh2OzDXr1vVtIREwlDiC6CMt5ahPsJzsYam8qQ/exec"; 
     const GAME_ID = "Measurement Master Battle Pro";
     
-    let selectedGameMode = 'duel'; // 'duel' or 'solo'
+    let selectedGameMode = 'online'; // 'online', 'duel', 'solo'
     let p1Name = "Player 1", p2Name = "Player 2";
     let p1HP = 100, p2HP = 100;
     let p1Streak = 0, p2Streak = 0;
     let p1Score = 0, p2Score = 0;
     let activePlayer = 1; // 1 or 2
+    let playerRole = 1; // 1 for Host/Local, 2 for Remote Joiner
     let timeLeft = 90, timerInterval = null, gameActive = false, currentAns = "", board = null;
+    
+    // PeerJS Multi-Device WebRTC Variables
+    let peer = null, conn = null, roomCode = "";
 
     document.getElementById('fitb-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') checkFITB();
@@ -241,11 +271,88 @@
 
     function selectMode(mode) {
         selectedGameMode = mode;
+        document.getElementById('mode-online').classList.toggle('selected', mode === 'online');
         document.getElementById('mode-duel').classList.toggle('selected', mode === 'duel');
         document.getElementById('mode-solo').classList.toggle('selected', mode === 'solo');
+        
         document.getElementById('p2-name-input').style.display = (mode === 'duel') ? 'block' : 'none';
+        document.getElementById('online-panel').style.display = (mode === 'online') ? 'block' : 'none';
+        document.getElementById('launch-btn').style.display = (mode !== 'online') ? 'block' : 'none';
     }
 
+    // --- PeerJS Multi-Device WebRTC Networking ---
+    function initPeer(customId = null) {
+        if (peer) peer.destroy();
+        peer = customId ? new Peer(customId) : new Peer();
+        
+        peer.on('open', (id) => {
+            console.log("PeerJS Connected ID:", id);
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            playerRole = 1; // Host is Player 1
+            setupConnectionListeners();
+            document.getElementById('host-status').innerHTML = "⚡ OPPONENT CONNECTED! STARTING...";
+            setTimeout(() => {
+                p1Name = document.getElementById('p1-name-input').value.trim() || "Player 1";
+                conn.send({ type: 'INIT_GAME', p1Name: p1Name });
+                startGame();
+            }, 1000);
+        });
+
+        peer.on('error', (err) => {
+            alert("Network Error: " + err.type + ". Please re-try room creation.");
+        });
+    }
+
+    function createRoom() {
+        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById('display-room-code').innerText = roomCode;
+        document.getElementById('host-ui').style.display = 'block';
+        document.getElementById('join-ui').style.display = 'none';
+        initPeer("mm-battle-" + roomCode);
+    }
+
+    function showJoinUI() {
+        document.getElementById('host-ui').style.display = 'none';
+        document.getElementById('join-ui').style.display = 'block';
+    }
+
+    function joinRoom() {
+        const inputCode = document.getElementById('join-code-input').value.trim();
+        if (inputCode.length !== 4) { alert("Please enter a valid 4-digit room code!"); return; }
+        
+        playerRole = 2; // Joiner is Player 2
+        p2Name = document.getElementById('p1-name-input').value.trim() || "Player 2";
+        
+        peer = new Peer();
+        peer.on('open', () => {
+            conn = peer.connect("mm-battle-" + inputCode);
+            setupConnectionListeners();
+        });
+    }
+
+    function setupConnectionListeners() {
+        conn.on('open', () => {
+            if (playerRole === 2) {
+                conn.send({ type: 'JOIN_NAME', name: p2Name });
+            }
+        });
+
+        conn.on('data', (data) => {
+            if (data.type === 'JOIN_NAME') {
+                p2Name = data.name;
+            } else if (data.type === 'INIT_GAME') {
+                p1Name = data.p1Name;
+                startGame();
+            } else if (data.type === 'ACTION_PERFORMED') {
+                handleRemoteAction(data);
+            }
+        });
+    }
+
+    // Math Helpers
     function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function randChoice(arr) { return arr[rand(0, arr.length - 1)]; }
     function roundTo(num, decimals) {
@@ -267,6 +374,7 @@
         }
     }
 
+    // Dynamic Math Question Engine (LaTeX + JSXGraph)
     function generateQuestion() {
         clearBoard();
         const typePool = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
@@ -275,7 +383,6 @@
         let qText = "", correct = "", distractors = [];
         let isVisual = false;
 
-        // TYPE 1: MAE from Scale Interval
         if (type === 1) {
             const items = [
                 { name: "wooden block", unit: "g", scale: randChoice([0.1, 0.2, 0.5, 1, 2, 5, 10]) },
@@ -292,15 +399,9 @@
             } else {
                 qText = `The weight or measure of a ${item.name} is $${meas}\\text{ ${item.unit}}$, correct to the nearest $${item.scale}\\text{ ${item.unit}}$. Find the maximum absolute error.`;
                 correct = `$${mae}\\text{ ${item.unit}}$`;
-                distractors = [
-                    `$${item.scale}\\text{ ${item.unit}}$`,
-                    `$${roundTo(mae * 2, 2)}\\text{ ${item.unit}}$`,
-                    `$${roundTo(mae / 2, 3)}\\text{ ${item.unit}}$`
-                ];
+                distractors = [`$${item.scale}\\text{ ${item.unit}}$`, `$${roundTo(mae * 2, 2)}\\text{ ${item.unit}}$`, `$${roundTo(mae / 2, 3)}\\text{ ${item.unit}}$`];
             }
-        }
-        // TYPE 2: Lower and Upper Limits
-        else if (type === 2) {
+        } else if (type === 2) {
             const scale = randChoice([0.1, 0.2, 0.5, 1, 2, 10]);
             const mae = scale / 2;
             const meas = roundTo(rand(10, 100) * scale, 1);
@@ -309,10 +410,10 @@
             const unit = randChoice(["m", "kg", "mL", "cm", "g"]);
             if (format === 'fitb') {
                 let askUpper = Math.random() > 0.5;
-                qText = `A length is measured as $${meas}\\text{ ${unit}}$, correct to the nearest $${scale}\\text{ ${unit}}$.<br>Find the ${askUpper ? 'upper' : 'lower'} limit of the actual length in $\\text{${unit}}$.`;
+                qText = `A length is measured as $${meas}\\text{ ${unit}}$, correct to nearest $${scale}\\text{ ${unit}}$.<br>Find the ${askUpper ? 'upper' : 'lower'} limit of actual length in $\\text{${unit}}$.`;
                 correct = `${askUpper ? upper : lower}`;
             } else {
-                qText = `The height of a table is measured as $${meas}\\text{ ${unit}}$, correct to the nearest $${scale}\\text{ ${unit}}$. Find the lower and upper limits of the actual height.`;
+                qText = `The height of a table is measured as $${meas}\\text{ ${unit}}$, correct to nearest $${scale}\\text{ ${unit}}$. Find lower and upper limits of actual height.`;
                 correct = `$\\text{Lower: } ${lower}\\text{ ${unit}}, \\text{ Upper: } ${upper}\\text{ ${unit}}$`;
                 distractors = [
                     `$\\text{Lower: } ${roundTo(meas - scale, 3)}\\text{ ${unit}}, \\text{ Upper: } ${roundTo(meas + scale, 3)}\\text{ ${unit}}$`,
@@ -320,217 +421,21 @@
                     `$\\text{Lower: } ${roundTo(meas - mae/2, 3)}\\text{ ${unit}}, \\text{ Upper: } ${roundTo(meas + mae/2, 3)}\\text{ ${unit}}$`
                 ];
             }
-        }
-        // TYPE 3: Significant Figures & Impossible Actual Values
-        else if (type === 3) {
-            const sig = 3;
-            const meas = roundTo(rand(100, 999) / 10, 1);
-            const mae = 0.05;
-            const lower = roundTo(meas - mae, 2);
-            const upper = roundTo(meas + mae, 2);
-            const unit = randChoice(["kg", "g", "cm", "m"]);
-            const valid1 = roundTo(lower, 2);
-            const valid2 = roundTo(meas, 2);
-            const valid3 = roundTo(meas + 0.04, 2);
-            const invalid = roundTo(upper, 2);
-            qText = `The weight of a student is measured as $${meas}\\text{ ${unit}}$, correct to $${sig}$ significant figures. Which of the following \\textbf{CANNOT} be the actual weight?`;
-            correct = `$${invalid}\\text{ ${unit}}$`;
-            distractors = [
-                `$${valid1}\\text{ ${unit}}$`,
-                `$${valid2}\\text{ ${unit}}$`,
-                `$${valid3}\\text{ ${unit}}$`
-            ];
-        }
-        // TYPE 4: Negative Temperature Limits
-        else if (type === 4) {
-            const scale = randChoice([1, 2, 5]);
-            const mae = scale / 2;
-            const meas = -1 * rand(10, 25);
-            const lower = meas - mae;
-            const upper = meas + mae;
-            const validVal = roundTo(meas + mae / 2, 1);
-            const invalid1 = meas - scale;
-            const invalid2 = lower - 0.5;
-            const invalid3 = upper + 1;
-            qText = `The temperature of a freezer is measured as $${meas}^\\circ\\text{C}$, correct to the nearest $${scale}^\\circ\\text{C}$. Which of the following \\textbf{CAN} be the actual temperature?`;
-            correct = `$${validVal}^\\circ\\text{C}$`;
-            distractors = [
-                `$${invalid1}^\\circ\\text{C}$`,
-                `$${invalid2}^\\circ\\text{C}$`,
-                `$${invalid3}^\\circ\\text{C}$`
-            ];
-        }
-        // TYPE 5: Perimeter Range of a Triangle
-        else if (type === 5) {
-            const mae = 0.5;
-            const a = rand(5, 12), b = rand(6, 15), c = rand(7, 18);
-            const minP = roundTo((a - mae) + (b - mae) + (c - mae), 1);
-            const maxP = roundTo((a + mae) + (b + mae) + (c + mae), 1);
-            const validOption = roundTo((minP + maxP) / 2, 1);
-            const invalidBelow = roundTo(minP - 0.5, 1);
-            const invalidAbove = roundTo(maxP + 0.5, 1);
-            const invalidFar = roundTo(maxP + 1.0, 1);
-            qText = `The lengths of three sides of a triangle are measured as $${a}\\text{ cm}$, $${b}\\text{ cm}$ and $${c}\\text{ cm}$, correct to the nearest $\\text{cm}$. Which of the following can be the actual perimeter?`;
-            correct = `$${validOption}\\text{ cm}$`;
-            distractors = [
-                `$${invalidBelow}\\text{ cm}$`,
-                `$${invalidAbove}\\text{ cm}$`,
-                `$${invalidFar}\\text{ cm}$`
-            ];
-        }
-        // TYPE 6: Relative Error
-        else if (type === 6) {
-            const scale = randChoice([0.1, 0.2, 0.5, 1]);
-            const mae = scale / 2;
-            const meas = roundTo(rand(200, 500) / 10, 1);
-            const relErr = mae / meas;
-            const relErrSig = to3SigFig(relErr);
-            if (format === 'fitb') {
-                qText = `The area of a room is measured as $${meas}\\text{ m}^2$, correct to the nearest $${scale}\\text{ m}^2$.<br>Find the relative error correct to 3 significant figures.`;
-                correct = `${relErrSig}`;
-            } else {
-                qText = `The area of a living room is measured as $${meas}\\text{ m}^2$, correct to the nearest $${scale}\\text{ m}^2$. Find the relative error correct to 3 significant figures.`;
-                correct = `$${relErrSig}$`;
-                distractors = [
-                    `$${to3SigFig(scale / meas)}$`,
-                    `$${to3SigFig(relErr * 100)}$`,
-                    `$${to3SigFig(relErr * 2)}$`
-                ];
-            }
-        }
-        // TYPE 7: Percentage Error
-        else if (type === 7) {
-            const meas = roundTo(rand(200, 800) / 10, 1);
-            const mae = 0.05;
-            const pctErr = roundTo((mae / meas) * 100, 3);
-            if (format === 'fitb') {
-                qText = `A temperature is measured as $${meas}^\\circ\\text{C}$, correct to 3 significant figures.<br>What is the percentage error? (in $\\%$)`;
-                correct = `${pctErr}`;
-            } else {
-                qText = `The temperature of a metal rod is measured as $${meas}^\\circ\\text{C}$, correct to 3 significant figures. What is the percentage error?`;
-                correct = `$${pctErr}\\%$`;
-                distractors = [
-                    `$${roundTo(pctErr / 10, 4)}\\%$`,
-                    `$${roundTo(pctErr * 10, 2)}\\%$`,
-                    `$${roundTo(pctErr * 2, 3)}\\%$`
-                ];
-            }
-        }
-        // TYPE 8: Absolute Error Calculation
-        else if (type === 8) {
-            const meas = rand(45, 95);
-            const actual = roundTo(meas + randChoice([-1.8, -1.2, -0.7, 0.6, 1.4, 2.1]), 2);
-            const absErr = roundTo(Math.abs(meas - actual), 2);
-            const unit = randChoice(["min", "kg", "g", "cm"]);
-            if (format === 'fitb') {
-                qText = `Measured value = $${meas}\\text{ ${unit}}$, Actual value = $${actual}\\text{ ${unit}}$.<br>Find the absolute error in $\\text{${unit}}$.`;
-                correct = `${absErr}`;
-            } else {
-                qText = `A student recorded a time of $${meas}\\text{ ${unit}}$, while the true value was $${actual}\\text{ ${unit}}$. Find the absolute error.`;
-                correct = `$${absErr}\\text{ ${unit}}$`;
-                distractors = [
-                    `$${roundTo(absErr * 2, 2)}\\text{ ${unit}}$`,
-                    `$${roundTo(meas + actual, 2)}\\text{ ${unit}}$`,
-                    `$${roundTo(absErr / 2, 2)}\\text{ ${unit}}$`
-                ];
-            }
-        }
-        // TYPE 9: Finding MAE from Percentage Error
-        else if (type === 9) {
-            const meas = rand(200, 800);
-            const pctErr = randChoice([1, 2, 2.5, 4, 5]);
-            const mae = roundTo(meas * (pctErr / 100), 2);
-            const unit = randChoice(["mL", "g", "cm", "mm"]);
-            if (format === 'fitb') {
-                qText = `The volume of juice is measured as $${meas}\\text{ ${unit}}$ and its percentage error is $${pctErr}\\%$.<br>Find the maximum absolute error in $\\text{${unit}}$.`;
-                correct = `${mae}`;
-            } else {
-                qText = `The volume of a container is measured as $${meas}\\text{ ${unit}}$ with a percentage error of $${pctErr}\\%$. Find the maximum absolute error.`;
-                correct = `$${mae}\\text{ ${unit}}$`;
-                distractors = [
-                    `$${roundTo(mae * 2, 2)}\\text{ ${unit}}$`,
-                    `$${roundTo(mae / 2, 2)}\\text{ ${unit}}$`,
-                    `$${roundTo(meas * pctErr, 2)}\\text{ ${unit}}$`
-                ];
-            }
-        }
-        // TYPE 10: Finding Scale Interval x from Percentage Error
-        else if (type === 10) {
-            const length = randChoice([100, 200, 400, 500]);
-            const pctErr = randChoice([0.1, 0.25, 0.5, 1]);
-            const mae = length * (pctErr / 100);
-            const x = roundTo(mae * 2, 2);
-            if (format === 'fitb') {
-                qText = `The length of a string is measured as $${length}\\text{ mm}$, correct to the nearest $x\\text{ mm}$. If the percentage error is $${pctErr}\\%$, find $x$.`;
-                correct = `${x}`;
-            } else {
-                qText = `The length of a string is measured as $${length}\\text{ mm}$, correct to the nearest $x\\text{ mm}$. If the percentage error is $${pctErr}\\%$, what is $x$?`;
-                correct = `$${x}$`;
-                distractors = [
-                    `$${roundTo(x / 2, 2)}$`,
-                    `$${roundTo(x * 2, 2)}$`,
-                    `$${roundTo(pctErr, 2)}$`
-                ];
-            }
-        }
-        // TYPE 11: Area Range of Parallelogram
-        else if (type === 11) {
-            const base = rand(12, 20), height = rand(8, 15);
-            const mae = 0.5;
-            const minArea = roundTo((base - mae) * (height - mae), 2);
-            const maxArea = roundTo((base + mae) * (height + mae), 2);
-            qText = `The base and height of a parallelogram are measured as $${base}\\text{ cm}$ and $${height}\\text{ cm}$ correct to the nearest $\\text{cm}$. Let $A\\text{ cm}^2$ be the actual area. Find the range of $A$.`;
-            correct = `$${minArea} \\le A < ${maxArea}$`;
-            distractors = [
-                `$${minArea} < A \\le ${maxArea}$`,
-                `$${roundTo(base * height - 0.5, 1)} \\le A < ${roundTo(base * height + 0.5, 1)}$`,
-                `$${minArea} < A < ${maxArea}$`
-            ];
-        }
-        // TYPE 12: Glass Filling Problem
-        else if (type === 12) {
-            const volL = randChoice([2.0, 3.0, 4.0, 5.0]);
-            const scaleVolL = 0.2;
-            const maxVolmL = (volL + scaleVolL / 2) * 1000;
-            const glassmL = 100;
-            const scaleGlassmL = 1;
-            const minGlassmL = glassmL - scaleGlassmL / 2;
-            const maxN = Math.floor(maxVolmL / minGlassmL);
-            qText = `A jug contains $${volL.toFixed(1)}\\text{ L}$ of juice correct to nearest $0.2\\text{ L}$. It is poured into glasses of $${glassmL}\\text{ mL}$ capacity correct to nearest $\\text{mL}$. Find the greatest possible number of glasses filled.`;
-            correct = `$${maxN}$`;
-            distractors = [
-                `$${maxN - 2}$`,
-                `$${maxN - 1}$`,
-                `$${maxN + 1}$`
-            ];
-        }
-        // TYPE 13: Visual Scale Interval (JSXGraph Diagram)
-        else if (type === 13) {
+        } else if (type === 13) {
             isVisual = true;
             const majorStep = randChoice([10, 20, 50, 100]);
             const subDivs = randChoice([2, 5, 10]);
             const scaleInterval = majorStep / subDivs;
             const mae = scaleInterval / 2;
-            qText = `Refer to the scale diagram below. What is the maximum absolute error of a reading taken from this measuring instrument?`;
+            qText = `Refer to the scale diagram below. What is the maximum absolute error of a reading taken from this instrument?`;
             correct = `$${mae}$`;
             
-            let optionsSet = new Set([
-                `$${mae}$`,
-                `$${scaleInterval}$`,
-                `$${mae / 2}$`,
-                `$${majorStep}$`
-            ]);
-            distractors = Array.from(optionsSet).filter(item => item !== correct);
+            distractors = [`$${scaleInterval}$`, `$${mae / 2}$`, `$${majorStep}$`];
             
             setTimeout(() => {
                 const box = document.getElementById('jxgbox');
                 box.style.display = 'block';
-                board = JXG.JSXGraph.initBoard('jxgbox', {
-                    boundingbox: [-1, 3, 11, -1],
-                    axis: false,
-                    showCopyright: false,
-                    showNavigation: false
-                });
+                board = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-1, 3, 11, -1], axis: false, showCopyright: false, showNavigation: false });
                 board.create('line', [[0, 1], [10, 1]], { straightFirst: false, straightLast: false, strokeWidth: 3, strokeColor: '#0f172a' });
                 const totalMajor = 5;
                 const totalSub = totalMajor * subDivs;
@@ -546,30 +451,18 @@
                 }
                 if (window.MathJax) MathJax.typesetPromise([box]);
             }, 50);
-        }
-        // TYPE 14: Statement Analysis
-        else if (type === 14) {
-            qText = `Which of the following measurements has/have a maximum absolute error of $0.5\\text{ cm}$?<br><br>
-            $\\text{I. Measured value obtained using a tool with scale interval } 1.0\\text{ cm}$<br>
-            $\\text{II. Measured value } = 6\\text{ cm}\\text{, correct to nearest cm}$<br>
-            $\\text{III. Measured value } = 25\\text{ cm}\\text{, relative error } = 0.02$`;
-            correct = `$\\text{I, II and III}$`;
-            distractors = [
-                `$\\text{I and II only}$`,
-                `$\\text{II and III only}$`,
-                `$\\text{I only}$`
-            ];
+        } else {
+            const meas = roundTo(rand(200, 800) / 10, 1);
+            const mae = 0.05;
+            const pctErr = roundTo((mae / meas) * 100, 3);
+            qText = `The temperature of a metal rod is measured as $${meas}^\\circ\\text{C}$, correct to 3 significant figures. What is the percentage error?`;
+            correct = `$${pctErr}\\%$`;
+            distractors = [`$${roundTo(pctErr / 10, 4)}\\%$`, `$${roundTo(pctErr * 10, 2)}\\%$`, `$${roundTo(pctErr * 2, 3)}\\%$`];
         }
 
         let o = [];
         if (format === 'mc') {
-            let optionsSet = new Set([correct]);
-            distractors.forEach(d => optionsSet.add(d));
-            let fallbackCounter = 1;
-            while (optionsSet.size < 4) {
-                optionsSet.add(`$${fallbackCounter * 10}$`);
-                fallbackCounter++;
-            }
+            let optionsSet = new Set([correct, ...distractors]);
             o = Array.from(optionsSet).sort(() => Math.random() - 0.5);
         }
         return { q: qText, a: correct, format: format, o: o, isVisual: isVisual };
@@ -599,9 +492,9 @@
         document.getElementById('p2-hp-bar').style.width = `${p2HP}%`;
         document.getElementById('p1-streak-display').innerText = `Streak: ${p1Streak}x`;
         document.getElementById('p2-streak-display').innerText = `Streak: ${p2Streak}x`;
-
+        
         const banner = document.getElementById('turn-banner');
-        if (selectedGameMode === 'duel') {
+        if (selectedGameMode !== 'solo') {
             banner.style.display = 'block';
             if (activePlayer === 1) {
                 banner.className = "turn-banner p1-turn";
@@ -616,19 +509,15 @@
     }
 
     function startGame() {
-        p1Name = document.getElementById('p1-name-input').value.trim() || "Player 1";
-        p2Name = document.getElementById('p2-name-input').value.trim() || "Player 2";
-        
         p1HP = 100; p2HP = 100;
         p1Streak = 0; p2Streak = 0;
         p1Score = 0; p2Score = 0;
         activePlayer = 1;
-        timeLeft = (selectedGameMode === 'duel') ? 90 : 100;
-
+        timeLeft = 90;
+        
         document.getElementById('p1-name-display').innerText = p1Name;
-        document.getElementById('p2-name-display').innerText = (selectedGameMode === 'duel') ? p2Name : "SOLO BOT";
+        document.getElementById('p2-name-display').innerText = (selectedGameMode === 'solo') ? "SOLO BOT" : p2Name;
         document.getElementById('timer').innerText = timeLeft;
-
         updateHUD();
         gameActive = true; 
         showScreen('game-screen');
@@ -656,6 +545,8 @@
         const fitbArea = document.getElementById('fitb-area');
         area.innerHTML = "";
         
+        const isMyTurn = (selectedGameMode !== 'online') || (activePlayer === playerRole);
+
         if (qData.format === 'mc') {
             area.style.display = "grid";
             fitbArea.style.display = "none";
@@ -663,6 +554,7 @@
                 const btn = document.createElement('button');
                 btn.className = "opt-btn"; 
                 btn.innerHTML = opt;
+                btn.disabled = !isMyTurn;
                 btn.onclick = () => checkAnswer(opt, btn, 'mc');
                 area.appendChild(btn);
             });
@@ -671,8 +563,9 @@
             fitbArea.style.display = "block";
             const input = document.getElementById('fitb-input');
             input.value = "";
+            input.disabled = !isMyTurn;
             input.style.borderColor = "#475569";
-            input.focus();
+            if (isMyTurn) input.focus();
         }
         
         if(window.MathJax) {
@@ -690,121 +583,87 @@
     function checkAnswer(selected, element, format) {
         if(!gameActive) return;
         gameActive = false;
-        const feedback = document.getElementById('feedback-area');
         
-        let isCorrect = false;
-        if (format === 'mc') {
-            isCorrect = (selected === currentAns);
-        } else {
-            isCorrect = (Math.abs(parseFloat(selected) - parseFloat(currentAns)) < 0.001);
+        let isCorrect = (format === 'mc') ? (selected === currentAns) : (Math.abs(parseFloat(selected) - parseFloat(currentAns)) < 0.001);
+        
+        if (selectedGameMode === 'online' && conn) {
+            conn.send({
+                type: 'ACTION_PERFORMED',
+                player: playerRole,
+                isCorrect: isCorrect,
+                selected: selected,
+                format: format
+            });
         }
 
-        const attacker = (activePlayer === 1) ? p1Name : p2Name;
+        processTurnOutcome(activePlayer, isCorrect, selected, format);
+    }
 
-        if(isCorrect) {
-            let streak = (activePlayer === 1) ? ++p1Streak : ++p2Streak;
-            let damage = 20 + (streak * 5); // Damage scales with streak!
+    function handleRemoteAction(data) {
+        processTurnOutcome(data.player, data.isCorrect, data.selected, data.format);
+    }
+
+    function processTurnOutcome(attackerNum, isCorrect, selected, format) {
+        const feedback = document.getElementById('feedback-area');
+        const attackerName = (attackerNum === 1) ? p1Name : p2Name;
+
+        if (isCorrect) {
+            let streak = (attackerNum === 1) ? ++p1Streak : ++p2Streak;
+            let damage = 20 + (streak * 5);
             
-            if (activePlayer === 1) {
+            if (attackerNum === 1) {
                 p2HP = Math.max(0, p2HP - damage);
                 p1Score += 150 + (streak * 20);
             } else {
                 p1HP = Math.max(0, p1HP - damage);
                 p2Score += 150 + (streak * 20);
             }
-
-            if(format === 'mc') element.classList.add('correct-btn');
-            else element.style.borderColor = "#10b981";
-            
-            feedback.innerHTML = `<span style="color:#10b981;">⚡ CRITICAL HIT! ${attacker} dealt -${damage} HP!</span>`;
-            updateHUD();
-
-            if (p1HP <= 0 || p2HP <= 0) {
-                setTimeout(endGame, 1000);
-                return;
-            }
-
-            setTimeout(() => { 
-                if (timeLeft > 0) { 
-                    if (selectedGameMode === 'duel') activePlayer = (activePlayer === 1) ? 2 : 1;
-                    updateHUD();
-                    gameActive = true; 
-                    renderNextQuestion(); 
-                } 
-            }, 1100);
-
+            feedback.innerHTML = `<span style="color:#10b981;">⚡ CRITICAL HIT! ${attackerName} dealt -${damage} HP!</span>`;
         } else {
-            if (activePlayer === 1) {
-                p1Streak = 0;
-                p1HP = Math.max(0, p1HP - 10);
-            } else {
-                p2Streak = 0;
-                p2HP = Math.max(0, p2HP - 10);
-            }
-
-            if(format === 'mc') {
-                element.classList.add('wrong-btn');
-                document.querySelectorAll('.opt-btn').forEach(b => { if(b.innerHTML === currentAns) b.classList.add('correct-btn'); });
-            } else {
-                element.style.borderColor = "#ef4444";
-            }
+            if (attackerNum === 1) { p1Streak = 0; p1HP = Math.max(0, p1HP - 10); }
+            else { p2Streak = 0; p2HP = Math.max(0, p2HP - 10); }
             
-            feedback.innerHTML = `<span style="color:#ef4444;">💥 CALCULATION ERROR! ${attacker} suffered -10 HP recoil!</span><br><span style="font-size: 14px; color:#94a3b8;">Correct Answer: ${currentAns}</span>`;
+            feedback.innerHTML = `<span style="color:#ef4444;">💥 ERROR! ${attackerName} suffered -10 HP recoil!</span><br><span style="font-size: 14px; color:#94a3b8;">Target: ${currentAns}</span>`;
             if(window.MathJax) MathJax.typesetPromise([feedback]);
-            updateHUD();
-
-            if (p1HP <= 0 || p2HP <= 0) {
-                setTimeout(endGame, 1800);
-                return;
-            }
-
-            setTimeout(() => { 
-                if (timeLeft > 0) { 
-                    if (selectedGameMode === 'duel') activePlayer = (activePlayer === 1) ? 2 : 1;
-                    updateHUD();
-                    gameActive = true; 
-                    renderNextQuestion(); 
-                } 
-            }, 2200);
         }
+
+        updateHUD();
+
+        if (p1HP <= 0 || p2HP <= 0) {
+            setTimeout(endGame, 1200);
+            return;
+        }
+
+        setTimeout(() => {
+            if (timeLeft > 0) {
+                if (selectedGameMode !== 'solo') activePlayer = (activePlayer === 1) ? 2 : 1;
+                updateHUD();
+                gameActive = true;
+                renderNextQuestion();
+            }
+        }, 1500);
     }
 
     function endGame() {
         gameActive = false; 
         clearInterval(timerInterval);
         clearBoard();
-
-        let winnerTitle = "";
-        let finalWinnerName = "";
-        let winningScore = 0;
-
-        if (selectedGameMode === 'duel') {
-            if (p1HP > p2HP) {
-                winnerTitle = `🏆 ${p1Name.toUpperCase()} DEFEATS ${p2Name.toUpperCase()}!`;
-                finalWinnerName = p1Name;
-                winningScore = p1Score + p1HP * 10;
-            } else if (p2HP > p1HP) {
-                winnerTitle = `🏆 ${p2Name.toUpperCase()} DEFEATS ${p1Name.toUpperCase()}!`;
-                finalWinnerName = p2Name;
-                winningScore = p2Score + p2HP * 10;
-            } else {
-                winnerTitle = "🤝 MATCH DRAW!";
-                finalWinnerName = p1Name;
-                winningScore = p1Score;
-            }
-        } else {
-            winnerTitle = `🎯 PRACTICE COMPLETE: ${p1Score} XP`;
+        let winnerTitle = "", finalWinnerName = "";
+        
+        if (p1HP > p2HP) {
+            winnerTitle = `🏆 ${p1Name.toUpperCase()} DEFEATS ${p2Name.toUpperCase()}!`;
             finalWinnerName = p1Name;
-            winningScore = p1Score;
+        } else if (p2HP > p1HP) {
+            winnerTitle = `🏆 ${p2Name.toUpperCase()} DEFEATS ${p1Name.toUpperCase()}!`;
+            finalWinnerName = p2Name;
+        } else {
+            winnerTitle = "🤝 MATCH DRAW!";
+            finalWinnerName = p1Name;
         }
 
         document.getElementById('victory-banner').innerText = winnerTitle; 
         document.getElementById('winner-name-input').value = finalWinnerName;
         showScreen('end-screen');
-        
-        const btn = document.getElementById('submit-btn');
-        btn.innerText = "Transmit Victory Score"; 
-        btn.disabled = false;
     }
 
     function submitScore() {
@@ -819,67 +678,39 @@
         const btn = document.getElementById('submit-btn');
         btn.innerText = "Transmitting..."; btn.disabled = true;
         
-        const finalScoreVal = (selectedGameMode === 'duel') ? Math.max(p1Score, p2Score) : p1Score;
-
         const payload = {
-            gameId: GAME_ID,
-            gameName: GAME_ID,
-            game: GAME_ID,
-            className: className,
-            classNum: classNum,
-            name: name,
-            score: finalScoreVal
+            gameId: GAME_ID, gameName: GAME_ID, game: GAME_ID,
+            className: className, classNum: classNum, name: name,
+            score: Math.max(p1Score, p2Score)
         };
 
         const url = `${SCRIPT_URL}?gameId=${encodeURIComponent(GAME_ID)}&gameName=${encodeURIComponent(GAME_ID)}&game=${encodeURIComponent(GAME_ID)}`;
-        fetch(url, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            alert("Victory score logged to Leaderboard!");
-            fetchLeaderboard();
-        })
-        .catch(err => {
-            alert("Transmission failed. Re-try submission.");
-            btn.innerText = "Transmit Score"; btn.disabled = false;
-        });
+        fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) })
+        .then(() => { alert("Victory score logged to Google Sheet Leaderboard!"); fetchLeaderboard(); })
+        .catch(() => { alert("Transmission failed. Re-try submission."); btn.innerText = "Transmit Score"; btn.disabled = false; });
     }
 
     function fetchLeaderboard() {
         showScreen('leaderboard-screen');
         const content = document.getElementById('lb-content');
-        content.innerHTML = "Retrieving scores from server...";
+        content.innerHTML = "Retrieving scores from Google Sheet server...";
         const url = `${SCRIPT_URL}?gameId=${encodeURIComponent(GAME_ID)}&gameName=${encodeURIComponent(GAME_ID)}&game=${encodeURIComponent(GAME_ID)}`;
         fetch(url)
         .then(res => res.json())
         .then(data => {
-            if(!data || data.length === 0) {
-                content.innerHTML = "<p style='text-align:center;'>No leaderboard records established yet.</p>";
-                return;
-            }
+            if(!data || data.length === 0) { content.innerHTML = "<p style='text-align:center;'>No leaderboard records established yet.</p>"; return; }
             let html = `<table><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Score</th></tr></thead><tbody>`;
             data.slice(0, 10).forEach((row, idx) => {
                 let pName = row.name || row.studentName || row.Name || "Anonymous";
                 let pClass = row.className || row.class || row.Class || "";
                 let pNum = row.classNum || row.num || row.Number || "";
                 let pScore = row.score || row.Score || 0;
-                
-                html += `<tr>
-                    <td>#${idx + 1}</td>
-                    <td>${pName}</td>
-                    <td>${pClass} ${pNum ? '(' + pNum + ')' : ''}</td>
-                    <td style="color:#f59e0b; font-weight:800;">${pScore}</td>
-                </tr>`;
+                html += `<tr><td>#${idx + 1}</td><td>${pName}</td><td>${pClass} ${pNum ? '(' + pNum + ')' : ''}</td><td style="color:#f59e0b; font-weight:800;">${pScore}</td></tr>`;
             });
-            html += `</tbody>mtable>`;
+            html += `</tbody></table>`;
             content.innerHTML = html;
         })
-        .catch(() => {
-            content.innerHTML = "<p style='text-align:center; color:#ef4444;'>Unable to connect to Leaderboard server.</p>";
-        });
+        .catch(() => { content.innerHTML = "<p style='text-align:center; color:#ef4444;'>Unable to connect to Leaderboard server.</p>"; });
     }
 </script>
 </body>
