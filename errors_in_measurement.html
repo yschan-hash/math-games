@@ -882,17 +882,23 @@
         setTimeout(nextQuestionRound, 2000);
     }
     
-    function disablePlayerPanelInputs(pNum) {
+function disablePlayerPanelInputs(pNum) {
+    // Only disable controls if the incorrect player matches this device's role
+    if (pNum === playerRole) {
         document.querySelectorAll(`#controls-container .opt-btn`).forEach(btn => btn.disabled = true);
         const fitb = document.getElementById(`fitb-p${pNum}`);
         if (fitb) fitb.disabled = true;
     }
-    
-    function enablePlayerPanelInputs(pNum) {
+}
+
+function enablePlayerPanelInputs(pNum) {
+    // Only re-enable controls if this device matches pNum
+    if (pNum === playerRole) {
         document.querySelectorAll(`#controls-container .opt-btn`).forEach(btn => btn.disabled = false);
         const fitb = document.getElementById(`fitb-p${pNum}`);
         if (fitb) fitb.disabled = false;
     }
+}
     
     function disableAllInputs() {
         document.querySelectorAll('#controls-container button, #controls-container input').forEach(el => el.disabled = true);
