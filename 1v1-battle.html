@@ -1,1 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Measurement Master: 1v1 Real-Time Battle</title>
 
+    <!-- 1. MathJax 3.0 (LaTeX 公式渲染) -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: { typeset: true }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- 2. JSXGraph (教科書等級動態圖表) -->
+    <script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+
+    <!-- 3. Firebase Compatibility SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #334155; margin: 0; padding: 0; }
+        
+        #game-container {
+            background: #f8fafc; width: 100%; max-width: 650px; margin: 0 auto;
+            min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.5);
+        }
+        .header { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+        
+        .screen { display: none; padding: 20px; flex-grow: 1; }
+        .active { display: block; }
+
+        /* Battle HUD */
+        .battle-hud { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .p-box { width: 42%; }
+        .hp-bar { height: 16px; background: #475569; border-radius: 8px; overflow: hidden; margin-top: 5px; }
+        .hp-fill { height: 100%; background: #10b981; transition: width 0.3s ease; }
+        
+        .q-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; border: 1px solid #e2e8f0; font-size: 16px; font-weight: 600; }
+        #jxgbox { width: 100%; height: 200px; margin: 15px auto; border-radius: 10px; border: 1px solid #cbd5e1; display: none; background: #fff; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .opt-btn { background: white; border: 2px solid #cbd5e1; padding: 12px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 0 #cbd5e1; min-height: 55px; }
+        .opt-btn:active { transform: translateY(2px); box-shadow: none; }
+        
+        .action-btn { background: #059669; color: white; border: none; padding: 14px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; box-shadow: 0 4px 0 #047857; margin-top: 10px; }
+        input { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; text-align: center; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="header">
+        <h1>⚔️ Measurement Master <span style="color:#fbbf24">1v1 BATTLE</span></h1>
+        <small>Real-time Errors & Scale Analytics Duel</small>
+    </div>
+
+    <!-- 1. 大廳與房間建立 -->
+    <div id="lobby-screen" class="screen active">
+        <div class="q-card">
+            <h3>🎮 進入對戰大廳</h3>
+            <input type="text" id="player-class" placeholder="班別 (例如: 2A)" style="width: 45%; display:inline-block;">
+            <input type="number" id="player-num" placeholder="座號" style="width: 45%; display:inline-block;"><br>
+            <input type="text" id="player-name" placeholder="學生姓名"><br><br>
+
+            <button class="action-btn" onclick="createRoom()">建立對戰房間 (Host)</button>
+            <div style="margin: 15px 0; color: #64748b;">— 或 —</div>
+            <input type="text" id="room-code-input" placeholder="輸入 4 位數房號">
+            <button class="action-btn" style="background:#3b82f6; box-shadow:0 4px 0 #2563eb;" onclick="joinRoom()">加入對戰房間 (Join)</button>
+            <p id="lobby-status" style="color:#d97706; font-weight:bold; margin-top:15px;"></p>
+        </div>
+    </div>
+
+    <!-- 2. 即時對戰畫面 -->
+    <div id="battle-screen" class="screen">
+        <div class="battle-hud">
+            <div class="p-box">
+                <span id="p1-name">P1</span>
+                <div class="hp-bar"><div id="p1-hp" class="hp-fill" style="width:100%;"></div></div>
+            </div>
+            <div style="color:#ef4444; font-weight:900; font-size:18px;">VS</div>
+            <div class="p-box" style="text-align:right;">
+                <span id="p2-name">P2</span>
+                <div class="hp-bar"><div id="p2-hp" class="hp-fill" style="width:100%; background:#f59e0b;"></div></div>
+            </div>
+        </div>
+
+        <div class="q-card">
+            <div id="question-text">載入題目中...</div>
+            <div id="jxgbox" class="jxgbox"></div>
+        </div>
+
+        <div class="options-grid" id="options-area"></div>
+        <p id="feedback-area" style="text-align:center; font-weight:bold; margin-top:15px; min-height:24px;"></p>
+    </div>
+
+    <!-- 3. 對戰結算畫面 -->
+    <div id="end-screen" class="screen" style="text-align:center;">
+        <div class="q-card">
+            <h2 id="winner-title" style="color:#059669;"></h2>
+            <p>成績已自動同步傳送至 Google Sheets 排行榜！</p>
+            <button class="action-btn" onclick="location.reload()">返回大廳</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. 初始化 Firebase 專案設定
+    const firebaseConfig = {
+        apiKey: "AIzaSyD18PH61eL7RPAWEwnkMXVrlWNDrktzw34",
+        authDomain: "math-battle-hub.firebaseapp.com",
+        databaseURL: "https://math-battle-hub-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "math-battle-hub",
+        storageBucket: "math-battle-hub.firebasestorage.app",
+        messagingSenderId: "509331129627",
+        appId: "1:509331129627:web:fa6f0e47430834c1733fbe",
+        measurementId: "G-XC7WXGZKJY"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. Google Apps Script 排行榜 API
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxqqqYRcv23BkPQb1jj8TzBVDyn6dsAh2OzDXr1vVtIREwlDiC6CMt5ahPsJzsYam8qQ/exec";
+    const GAME_ID = "Measurement Master 1v1 Battle";
+
+    let currentRoom = null, myRole = "", myInfo = {}, currentQ = null, board = null;
+
+    function getPlayerInfo() {
+        const c = document.getElementById('player-class').value.trim().toUpperCase();
+        const n = document.getElementById('player-num').value.trim();
+        const name = document.getElementById('player-name').value.trim();
+        if(!c || !n || !name) { alert("請完整填寫班別、座號與姓名！"); return null; }
+        return { className: c, classNum: n, name: name };
+    }
+
+    // 建立房間 (Host)
+    function createRoom() {
+        myInfo = getPlayerInfo();
+        if(!myInfo) return;
+
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        currentRoom = roomCode;
+        myRole = "p1";
+
+        db.ref('rooms/' + roomCode).set({
+            status: "waiting",
+            p1: { name: `${myInfo.className} (${myInfo.classNum}) ${myInfo.name}`, raw: myInfo, hp: 100 },
+            p2: { name: "等待對手加入...", hp: 100 },
+            currentQ: generateQuestionData()
+        });
+
+        document.getElementById('lobby-status').innerText = `房間已建立！請告知對手房號：[ ${roomCode} ]`;
+        listenToRoom(roomCode);
+    }
+
+    // 加入房間 (Client)
+    function joinRoom() {
+        myInfo = getPlayerInfo();
+        const code = document.getElementById('room-code-input').value.trim();
+        if(!myInfo || !code) return;
+
+        const roomRef = db.ref('rooms/' + code);
+        roomRef.once('value', snapshot => {
+            if(!snapshot.exists()) return alert("房號不存在！");
+            currentRoom = code;
+            myRole = "p2";
+
+            roomRef.update({
+                "p2/name": `${myInfo.className} (${myInfo.classNum}) ${myInfo.name}`,
+                "p2/raw": myInfo,
+                status: "playing"
+            });
+            listenToRoom(code);
+        });
+    }
+
+    // 監聽 Firebase 資料庫變化 (低於 100ms 即時同步)
+    function listenToRoom(code) {
+        db.ref('rooms/' + code).on('value', snapshot => {
+            const data = snapshot.val();
+            if(!data) return;
+
+            if(data.status === "playing") {
+                showScreen('battle-screen');
+                document.getElementById('p1-name').innerText = data.p1.name;
+                document.getElementById('p2-name').innerText = data.p2.name;
+                document.getElementById('p1-hp').style.width = Math.max(0, data.p1.hp) + "%";
+                document.getElementById('p2-hp').style.width = Math.max(0, data.p2.hp) + "%";
+
+                // 檢查勝負
+                if(data.p1.hp <= 0 || data.p2.hp <= 0) {
+                    let winner = data.p1.hp > 0 ? data.p1 : data.p2;
+                    showEndGame(winner, data);
+                    return;
+                }
+
+                // 當題目更新時，動態渲染
+                if(!currentQ || currentQ.id !== data.currentQ.id) {
+                    currentQ = data.currentQ;
+                    renderQuestion(data.currentQ);
+                }
+            }
+        });
+    }
+
+    // 生成題目 (包含 LaTeX 與 JSXGraph 視覺繪圖)
+    function generateQuestionData() {
+        const qId = Date.now();
+        const isVisual = Math.random() < 0.5;
+
+        if(!isVisual) {
+            const scale = [0.1, 0.2, 0.5, 1, 2][Math.floor(Math.random() * 5)];
+            const mae = scale / 2;
+            return {
+                id: qId, isVisual: false,
+                text: `量度工具的最小刻度為 $${scale}\\text{ cm}$。<br>求其最大絕對誤差 (MAE)。`,
+                correct: `$${mae}\\text{ cm}$`,
+                options: [`$${mae}\\text{ cm}$`, `$${scale}\\text{ cm}$`, `$${mae/2}\\text{ cm}$`, `$${scale*2}\\text{ cm}$`].sort(() => Math.random() - 0.5)
+            };
+        } else {
+            const majorStep = [10, 20, 50][Math.floor(Math.random() * 3)];
+            const mae = majorStep / 4;
+            return {
+                id: qId, isVisual: true, majorStep: majorStep,
+                text: `參閱下方刻度圖表，求該量度工具的最大絕對誤差 (MAE)。`,
+                correct: `$${mae}$`,
+                options: [`$${mae}$`, `$${majorStep}$`, `$${mae*2}$`, `$${mae/2}$`].sort(() => Math.random() - 0.5)
+            };
+        }
+    }
+
+    // 渲染題目 (MathJax + JSXGraph)
+    function renderQuestion(q) {
+        document.getElementById('feedback-area').innerText = "";
+        document.getElementById('question-text').innerHTML = q.text;
+
+        const jxgBox = document.getElementById('jxgbox');
+        if (board) { JXG.JSXGraph.freeBoard(board); board = null; }
+
+        if (q.isVisual) {
+            jxgBox.style.display = 'block';
+            board = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-1, 3, 11, -1], axis: false, showCopyright: false, showNavigation: false });
+            board.create('line', [[0, 1], [10, 1]], { strokeWidth: 3, strokeColor: '#0f172a' });
+            for (let i = 0; i <= 4; i++) {
+                let x = i * 2.5;
+                board.create('segment', [[x, 1], [x, 1.6]], { strokeWidth: 2, strokeColor: '#0f172a' });
+                board.create('text', [x, 0.4, `\\(${i * q.majorStep}\\)`], { fontSize: 13, anchorX: 'middle', useMathJax: true });
+            }
+        } else {
+            jxgBox.style.display = 'none';
+        }
+
+        const area = document.getElementById('options-area');
+        area.innerHTML = "";
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "opt-btn";
+            btn.innerHTML = opt;
+            btn.onclick = () => handleAnswer(opt === q.correct);
+            area.appendChild(btn);
+        });
+
+        if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    // 處理答題扣血機制
+    function handleAnswer(isCorrect) {
+        const oppRole = myRole === "p1" ? "p2" : "p1";
+        const roomRef = db.ref('rooms/' + currentRoom);
+
+        roomRef.once('value', snapshot => {
+            const data = snapshot.val();
+            let oppHp = data[oppRole].hp;
+            let myHp = data[myRole].hp;
+
+            if (isCorrect) {
+                oppHp = Math.max(0, oppHp - 25);
+                document.getElementById('feedback-area').innerHTML = `<span style="color:#10b981;">✅ 答對！成功攻擊對手 -25 HP！</span>`;
+            } else {
+                myHp = Math.max(0, myHp - 10);
+                document.getElementById('feedback-area').innerHTML = `<span style="color:#ef4444;">❌ 答錯！自身受到反彈傷害 -10 HP！</span>`;
+            }
+
+            let updates = {};
+            updates[`${oppRole}/hp`] = oppHp;
+            updates[`${myRole}/hp`] = myHp;
+            if (isCorrect) updates['currentQ'] = generateQuestionData();
+
+            roomRef.update(updates);
+        });
+    }
+
+    // 結算與提交分數至 Google Sheets
+    function showEndGame(winnerObj, data) {
+        showScreen('end-screen');
+        document.getElementById('winner-title').innerText = `🏆 勝者：${winnerObj.name}`;
+
+        // 僅由 P1 負責向 Google Sheets 提交戰果
+        if (myRole === "p1" && winnerObj.raw) {
+            const payload = {
+                gameId: GAME_ID,
+                className: winnerObj.raw.className,
+                classNum: winnerObj.raw.classNum,
+                name: winnerObj.raw.name,
+                score: winnerObj.hp * 100
+            };
+            fetch(`${SCRIPT_URL}?gameId=${encodeURIComponent(GAME_ID)}`, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            });
+        }
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
