@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factorization Practice Worksheet (50 Questions)</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- KaTeX CSS & JS for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Print Stylesheet */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .card-box {
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    /* Keypad Ripple Effect */
+    .key-btn {
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+    }
+    .key-btn:active {
+      transform: scale(0.93);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white pb-36">
+
+  <!-- ================= HEADER & LIVE DASHBOARD ================= -->
+  <header class="no-print sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        <!-- Left: Title & Timer -->
+        <div class="flex items-center justify-between md:justify-start gap-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Factorization Practice Worksheet
+            </h1>
+            <p class="text-xs text-slate-400">50 Questions (55 Parts) • Secondary School Curriculum</p>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs text-slate-300">
+            <i class="fa-regular font-mono text-indigo-400 fa-clock"></i>
+            <span id="timerDisplay" class="font-mono font-bold text-slate-200">00:00</span>
+          </div>
+        </div>
+
+        <!-- Right: Requirements Badge & Action Buttons -->
+        <div class="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
+          <!-- Requirement Status Badge -->
+          <div id="requirementBadge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="reqText">Requirement: 0/30 Answered</span>
+          </div>
+
+          <!-- Teacher Mode Password Unlock Button -->
+          <button id="teacherUnlockBtn" onclick="openPasswordModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-amber-400 transition">
+            <i class="fa-solid fa-lock"></i>
+            <span id="teacherBtnText" class="hidden sm:inline">Teacher Mode</span>
+          </button>
+
+          <!-- Keypad Toggle -->
+          <button id="toggleKeypadBtn" onclick="toggleVirtualKeyboard()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition">
+            <i class="fa-solid fa-keyboard text-indigo-400"></i>
+            <span class="hidden sm:inline">Keypad</span>
+          </button>
+
+          <!-- Submit Button -->
+          <button id="submitWorksheetBtn" onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Finish & Submit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Progress Bar & Stats -->
+      <div class="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-5 gap-3 items-center text-xs">
+        
+        <!-- Progress Bar Container -->
+        <div class="col-span-2 sm:col-span-2">
+          <div class="flex justify-between items-center mb-1 text-slate-400 font-medium">
+            <span>Overall Progress</span>
+            <span id="progressPercent" class="text-indigo-400 font-bold">0% (0/55)</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+            <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Correct Count -->
+        <div class="bg-slate-800/60 border border-slate-800 p-2 rounded-xl flex items-center justify-between">
+          <span class="text-slate-400">Correct:</span>
+          <span id="correctCount" class="font-bold text-emerald-400">0</span>
+        </div>
+
+        <!-- Incorrect Count -->
+        <div class="bg-slate-800/60 border border-slate-800 p-2 rounded-xl flex items-center justify-between">
+          <span class="text-slate-400">Incorrect:</span>
+          <span id="incorrectCount" class="font-bold text-rose-400">0</span>
+        </div>
+
+        <!-- Completion Score -->
+        <div class="bg-slate-800/60 border border-slate-800 p-2 rounded-xl flex items-center justify-between">
+          <span class="text-slate-400">Accuracy:</span>
+          <span id="accuracyScore" class="font-bold text-indigo-300">0%</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    
+    <!-- Filter & Navigation Toolbar -->
+    <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+      
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
+        <button onclick="setFilter('all')" id="filter-all" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white transition">
+          All (55)
+        </button>
+        <button onclick="setFilter('level1')" id="filter-level1" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Level 1 (Easy)
+        </button>
+        <button onclick="setFilter('level2')" id="filter-level2" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Level 2 (Medium)
+        </button>
+        <button onclick="setFilter('attempted')" id="filter-attempted" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Attempted
+        </button>
+        <button onclick="setFilter('unanswered')" id="filter-unanswered" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Unanswered
+        </button>
+      </div>
+
+      <!-- Quick Question Jump & Reset -->
+      <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+        <div class="flex items-center gap-2">
+          <label for="jumpSelect" class="text-xs text-slate-400">Jump to:</label>
+          <select id="jumpSelect" onchange="jumpToQuestion(this.value)" class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <button onclick="confirmResetAll()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-800 text-xs transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Questions Grid Container -->
+    <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Question Cards dynamically injected here -->
+    </div>
+  </main>
+
+  <!-- ================= FLOATING ON-SCREEN MATH KEYBOARD ================= -->
+  <div id="virtualKeypad" class="no-print fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 border-t border-slate-700 shadow-2xl backdrop-blur-lg transform transition-transform duration-300">
+    <div class="max-w-4xl mx-auto px-3 py-2">
+      
+      <!-- Keypad Header Bar -->
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-indigo-400"><i class="fa-solid fa-keyboard mr-1"></i> Math Keypad</span>
+          <span id="activeQuestionTarget" class="text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md text-[10px]">Select an input field</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="clearActiveInput()" class="text-slate-400 hover:text-rose-400 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] transition">Clear</button>
+          <button onclick="toggleVirtualKeyboard()" class="text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 text-[11px]"><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
+      </div>
+
+      <!-- Keypad Button Rows -->
+      <div class="grid grid-cols-12 gap-1 text-center font-mono">
+        
+        <!-- Row 1: Exponents, Parentheses, Operations -->
+        <button onclick="keyInsert('^2')" class="key-btn col-span-2 bg-slate-800 hover:bg-indigo-600 text-indigo-300 hover:text-white p-2 rounded-lg text-xs font-bold border border-slate-700">x²</button>
+        <button onclick="keyInsert('^3')" class="key-btn col-span-2 bg-slate-800 hover:bg-indigo-600 text-indigo-300 hover:text-white p-2 rounded-lg text-xs font-bold border border-slate-700">x³</button>
+        <button onclick="keyInsert('^')" class="key-btn col-span-2 bg-slate-800 hover:bg-indigo-600 text-indigo-300 hover:text-white p-2 rounded-lg text-xs font-bold border border-slate-700">xⁿ (^)</button>
+        <button onclick="keyInsert('(')" class="key-btn col-span-2 bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-lg text-sm font-bold border border-slate-700">(</button>
+        <button onclick="keyInsert(')')" class="key-btn col-span-2 bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-lg text-sm font-bold border border-slate-700">)</button>
+        <button onclick="keyBackspace()" class="key-btn col-span-2 bg-rose-950/60 hover:bg-rose-600 text-rose-300 hover:text-white p-2 rounded-lg text-xs font-bold border border-rose-800/50"><i class="fa-solid fa-backspace"></i></button>
+
+        <!-- Row 2: Variable Keys -->
+        <button onclick="keyInsert('x')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-amber-300 p-2 rounded-lg text-xs font-bold border border-slate-700">x</button>
+        <button onclick="keyInsert('y')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-amber-300 p-2 rounded-lg text-xs font-bold border border-slate-700">y</button>
+        <button onclick="keyInsert('a')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 p-2 rounded-lg text-xs font-bold border border-slate-700">a</button>
+        <button onclick="keyInsert('b')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 p-2 rounded-lg text-xs font-bold border border-slate-700">b</button>
+        <button onclick="keyInsert('m')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-purple-300 p-2 rounded-lg text-xs font-bold border border-slate-700">m</button>
+        <button onclick="keyInsert('n')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-purple-300 p-2 rounded-lg text-xs font-bold border border-slate-700">n</button>
+        <button onclick="keyInsert('p')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-sky-300 p-2 rounded-lg text-xs font-bold border border-slate-700">p</button>
+        <button onclick="keyInsert('q')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-sky-300 p-2 rounded-lg text-xs font-bold border border-slate-700">q</button>
+        <button onclick="keyInsert('u')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-pink-300 p-2 rounded-lg text-xs font-bold border border-slate-700">u</button>
+        <button onclick="keyInsert('v')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-pink-300 p-2 rounded-lg text-xs font-bold border border-slate-700">v</button>
+        <button onclick="keyInsert('k')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-pink-300 p-2 rounded-lg text-xs font-bold border border-slate-700">k</button>
+        <button onclick="keyInsert('c')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-teal-300 p-2 rounded-lg text-xs font-bold border border-slate-700">c</button>
+
+        <!-- Row 3: Numbers & Operations -->
+        <button onclick="keyInsert('1')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">1</button>
+        <button onclick="keyInsert('2')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">2</button>
+        <button onclick="keyInsert('3')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">3</button>
+        <button onclick="keyInsert('4')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">4</button>
+        <button onclick="keyInsert('5')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">5</button>
+        <button onclick="keyInsert('6')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">6</button>
+        <button onclick="keyInsert('7')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">7</button>
+        <button onclick="keyInsert('8')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">8</button>
+        <button onclick="keyInsert('9')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">9</button>
+        <button onclick="keyInsert('0')" class="key-btn col-span-1 bg-slate-800/80 hover:bg-slate-700 text-slate-100 p-2 rounded-lg text-xs font-bold border border-slate-700">0</button>
+        <button onclick="keyInsert('+')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 p-2 rounded-lg text-xs font-bold border border-slate-700">+</button>
+        <button onclick="keyInsert('-')" class="key-btn col-span-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 p-2 rounded-lg text-xs font-bold border border-slate-700">-</button>
+
+        <!-- Row 4: Additional Navigation Actions -->
+        <button onclick="keyInsert(' ')" class="key-btn col-span-4 bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-xs font-bold border border-slate-700"><i class="fa-solid fa-ruler-horizontal mr-1"></i> Space</button>
+        <button onclick="keyNextQuestion()" class="key-btn col-span-8 bg-indigo-900/60 hover:bg-indigo-600 text-indigo-200 hover:text-white p-2 rounded-lg text-xs font-bold border border-indigo-700/60"><i class="fa-solid fa-arrow-down mr-1"></i> Next Question</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PASSWORD PROMPT MODAL ================= -->
+  <div id="passwordModal" class="no-print fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-100">Unlock Target Solutions</h2>
+        <p class="text-xs text-slate-400 mt-1">Teacher authentication required to view target answers.</p>
+      </div>
+
+      <form onsubmit="verifyPassword(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-300 font-medium mb-1.5">Enter Teacher Password</label>
+          <input type="password" id="passwordInput" required placeholder="Enter password..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-mono">
+        </div>
+
+        <div id="passwordError" class="hidden text-rose-400 text-xs bg-rose-950/40 border border-rose-800/50 p-2.5 rounded-xl flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>Incorrect Password. Access Denied.</span>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition">
+          Unlock Solutions
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= SUBMISSION STUDENT DETAILS MODAL ================= -->
+  <div id="submitModal" class="no-print fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeSubmitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-100">Submit Practice Worksheet</h2>
+        <p class="text-xs text-slate-400 mt-1">Please enter your details to generate your official performance report & certificate.</p>
+      </div>
+
+      <form onsubmit="generateFinalReport(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Full Student Name <span class="text-rose-400">*</span></label>
+          <input type="text" id="studentName" required placeholder="e.g. Alex Wong" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Class <span class="text-rose-400">*</span></label>
+            <input type="text" id="studentClass" required placeholder="e.g. 3A" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Class Number <span class="text-rose-400">*</span></label>
+            <input type="number" id="studentClassNum" required placeholder="e.g. 15" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Submission Date</label>
+          <input type="date" id="submissionDate" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="bg-indigo-950/40 border border-indigo-800/50 rounded-2xl p-3 flex items-center justify-between text-indigo-300">
+          <span>Completed Questions:</span>
+          <span id="modalAnsweredCount" class="font-bold text-white">0 / 55</span>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition">
+          Generate Official Report & Certificate
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FINAL REPORT / CERTIFICATE VIEW ================= -->
+  <div id="reportPage" class="hidden min-h-screen bg-slate-900 text-slate-100 p-4 sm:p-8">
+    <div class="max-w-5xl mx-auto">
+      
+      <!-- Report Header / Actions Bar -->
+      <div class="no-print flex items-center justify-between bg-slate-800 p-4 rounded-2xl mb-6 border border-slate-700">
+        <button onclick="closeReportPage()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-xl text-slate-200 transition">
+          <i class="fa-solid fa-arrow-left mr-1"></i> Return to Worksheet
+        </button>
+        <div class="flex items-center gap-3">
+          <button onclick="window.print()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg transition">
+            <i class="fa-solid fa-print mr-1"></i> Print / Save as PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Report Container -->
+      <div class="card-box bg-slate-800/80 border border-slate-700 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+        
+        <!-- School Header -->
+        <div class="text-center border-b border-slate-700 pb-6 mb-6">
+          <span class="text-indigo-400 font-bold uppercase tracking-widest text-xs">Secondary School Mathematics</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-100 mt-1">Factorization Practice Worksheet Report</h1>
+          <p class="text-xs text-slate-400 mt-1">50 Questions Comprehensive Secondary Curriculum Assessment</p>
+        </div>
+
+        <!-- Student Info Banner -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 mb-6 text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase">Student Name</span>
+            <span id="rptStudentName" class="font-bold text-slate-100 text-sm">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase">Class & Number</span>
+            <span id="rptStudentClass" class="font-bold text-slate-100 text-sm">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase">Submission Date</span>
+            <span id="rptDate" class="font-bold text-slate-100 text-sm">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase">Time Taken</span>
+            <span id="rptTimeTaken" class="font-bold text-indigo-400 text-sm">-</span>
+          </div>
+        </div>
+
+        <!-- Summary Performance Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700 text-center">
+            <span class="text-slate-400 text-xs block">Total Attempted</span>
+            <span id="rptTotalAttempted" class="text-2xl font-black text-slate-100">0 / 55</span>
+          </div>
+          <div class="bg-emerald-950/30 p-4 rounded-2xl border border-emerald-800/40 text-center">
+            <span class="text-emerald-400 text-xs block">Correct Answers</span>
+            <span id="rptCorrectCount" class="text-2xl font-black text-emerald-400">0</span>
+          </div>
+          <div class="bg-rose-950/30 p-4 rounded-2xl border border-rose-800/40 text-center">
+            <span class="text-rose-400 text-xs block">Incorrect Answers</span>
+            <span id="rptIncorrectCount" class="text-2xl font-black text-rose-400">0</span>
+          </div>
+          <div class="bg-indigo-950/30 p-4 rounded-2xl border border-indigo-800/40 text-center">
+            <span class="text-indigo-300 text-xs block">Overall Accuracy</span>
+            <span id="rptAccuracy" class="text-2xl font-black text-indigo-300">0%</span>
+          </div>
+        </div>
+
+        <!-- Itemized Answer Review Table -->
+        <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-indigo-400"></i> Itemized Answer Review
+        </h3>
+
+        <div class="overflow-x-auto border border-slate-700 rounded-2xl">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-900 text-slate-400 border-b border-slate-700 uppercase tracking-wider">
+                <th class="p-3">Q#</th>
+                <th class="p-3">Level</th>
+                <th class="p-3">Question Problem</th>
+                <th class="p-3">Your Answer</th>
+                <th class="p-3">Correct Answer</th>
+                <th class="p-3 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rptTableBody" class="divide-y divide-slate-700/60">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    const questionsData = [
+      // Level 1: Basic Foundations (Easy Q1-25)
+      { id: 1, level: 1, displayNum: "1", exprTex: "15x^2 - 30x", targetTex: "15x(x - 2)", accepted: ["15x(x-2)", "15x*(x-2)", "(x-2)15x", "(x-2)*15x"] },
+      { id: 2, level: 1, displayNum: "2", exprTex: "8a^2b + 12ab^2", targetTex: "4ab(2a + 3b)", accepted: ["4ab(2a+3b)", "4ab(3b+2a)", "4*a*b*(2a+3b)"] },
+      { id: 3, level: 1, displayNum: "3", exprTex: "x^2 - 64", targetTex: "(x - 8)(x + 8)", accepted: ["(x-8)(x+8)", "(x+8)(x-8)"] },
+      { id: 4, level: 1, displayNum: "4", exprTex: "49p^2 - 81q^2", targetTex: "(7p - 9q)(7p + 9q)", accepted: ["(7p-9q)(7p+9q)", "(7p+9q)(7p-9q)"] },
+      { id: 5, level: 1, displayNum: "5", exprTex: "m^2 + 10m + 25", targetTex: "(m + 5)^2", accepted: ["(m+5)^2", "(m+5)(m+5)", "(5+m)^2"] },
+      { id: 6, level: 1, displayNum: "6", exprTex: "9y^2 - 12y + 4", targetTex: "(3y - 2)^2", accepted: ["(3y-2)^2", "(3y-2)(3y-2)", "(2-3y)^2"] },
+      { id: 7, level: 1, displayNum: "7", exprTex: "ax + ay + bx + by", targetTex: "(a + b)(x + y)", accepted: ["(a+b)(x+y)", "(x+y)(a+b)", "(b+a)(x+y)"] },
+      { id: 8, level: 1, displayNum: "8", exprTex: "2x^3 - 8x", targetTex: "2x(x - 2)(x + 2)", accepted: ["2x(x-2)(x+2)", "2x(x+2)(x-2)", "2*x*(x-2)*(x+2)", "(x-2)(x+2)2x"] },
+      { id: 9, level: 1, displayNum: "9", exprTex: "25x^2 - 1", targetTex: "(5x - 1)(5x + 1)", accepted: ["(5x-1)(5x+1)", "(5x+1)(5x-1)"] },
+      { id: 10, level: 1, displayNum: "10", exprTex: "16k^2 + 24k + 9", targetTex: "(4k + 3)^2", accepted: ["(4k+3)^2", "(4k+3)(4k+3)", "(3+4k)^2"] },
+      { id: 11, level: 1, displayNum: "11", exprTex: "4u - uv + 8 - 2v", targetTex: "(4 - v)(u + 2)", accepted: ["(4-v)(u+2)", "(u+2)(4-v)", "(2+u)(4-v)", "-(v-4)(u+2)"] },
+      { id: 12, level: 1, displayNum: "12", exprTex: "5p(x + y) - 3q(x + y)", targetTex: "(x + y)(5p - 3q)", accepted: ["(x+y)(5p-3q)", "(5p-3q)(x+y)", "(y+x)(5p-3q)"] },
+      { id: 13, level: 1, displayNum: "13", exprTex: "w^2 - 14w + 49", targetTex: "(w - 7)^2", accepted: ["(w-7)^2", "(w-7)(w-7)", "(7-w)^2"] },
+      { id: 14, level: 1, displayNum: "14", exprTex: "100a^2 - 9b^2", targetTex: "(10a - 3b)(10a + 3b)", accepted: ["(10a-3b)(10a+3b)", "(10a+3b)(10a-3b)"] },
+      { id: 15, level: 1, displayNum: "15", exprTex: "x^2y - xy^2", targetTex: "xy(x - y)", accepted: ["xy(x-y)", "x*y*(x-y)", "y*x*(x-y)"] },
+      { id: 16, level: 1, displayNum: "16", exprTex: "12a^3 - 18a^2", targetTex: "6a^2(2a - 3)", accepted: ["6a^2(2a-3)", "6a^2*(2a-3)", "6*a^2*(2a-3)"] },
+      { id: 17, level: 1, displayNum: "17", exprTex: "36m^2 - 121n^2", targetTex: "(6m - 11n)(6m + 11n)", accepted: ["(6m-11n)(6m+11n)", "(6m+11n)(6m-11n)"] },
+      { id: 18, level: 1, displayNum: "18", exprTex: "c^2 + 16c + 64", targetTex: "(c + 8)^2", accepted: ["(c+8)^2", "(c+8)(c+8)", "(8+c)^2"] },
+      { id: 19, level: 1, displayNum: "19", exprTex: "4x^2 - 20x + 25", targetTex: "(2x - 5)^2", accepted: ["(2x-5)^2", "(2x-5)(2x-5)", "(5-2x)^2"] },
+      { id: 20, level: 1, displayNum: "20", exprTex: "px - py + qx - qy", targetTex: "(p + q)(x - y)", accepted: ["(p+q)(x-y)", "(x-y)(p+q)", "(q+p)(x-y)"] },
+      { id: 21, level: 1, displayNum: "21", exprTex: "6a(m - n) + 5b(m - n)", targetTex: "(m - n)(6a + 5b)", accepted: ["(m-n)(6a+5b)", "(6a+5b)(m-n)", "(5b+6a)(m-n)"] },
+      { id: 22, level: 1, displayNum: "22", exprTex: "81 - y^2", targetTex: "(9 - y)(9 + y)", accepted: ["(9-y)(9+y)", "(9+y)(9-y)", "-(y-9)(y+9)"] },
+      { id: 23, level: 1, displayNum: "23", exprTex: "3x^2 + 12x", targetTex: "3x(x + 4)", accepted: ["3x(x+4)", "3x*(x+4)", "3*x*(x+4)"] },
+      { id: 24, level: 1, displayNum: "24", exprTex: "16a^2 - 40ab + 25b^2", targetTex: "(4a - 5b)^2", accepted: ["(4a-5b)^2", "(4a-5b)(4a-5b)", "(5b-4a)^2"] },
+      { id: 25, level: 1, displayNum: "25", exprTex: "ab - 3a + 2b - 6", targetTex: "(a + 2)(b - 3)", accepted: ["(a+2)(b-3)", "(b-3)(a+2)", "(2+a)(b-3)"] },
+
+      // Level 2: Intermediate Multi-Step (Medium Q26-50)
+      { id: 26, level: 2, displayNum: "26", exprTex: "2a - ka + 6 - 3k", targetTex: "(a + 3)(2 - k)", accepted: ["(a+3)(2-k)", "(2-k)(a+3)", "-(a+3)(k-2)"] },
+      { id: 27, level: 2, displayNum: "27", exprTex: "xy - 4x - 3y + 12", targetTex: "(x - 3)(y - 4)", accepted: ["(x-3)(y-4)", "(y-4)(x-3)", "(3-x)(4-y)"] },
+      { id: 28, level: 2, displayNum: "28", exprTex: "(2a - b)(x - y) + (3b - a)(y - x)", targetTex: "(x - y)(3a - 4b)", accepted: ["(x-y)(3a-4b)", "(3a-4b)(x-y)", "(y-x)(4b-3a)"] },
+      { id: 29, level: 2, displayNum: "29", exprTex: "(5m + 2)(p - q) - (m - 4)(q - p)", targetTex: "2(p - q)(3m - 1)", accepted: ["2(p-q)(3m-1)", "2(3m-1)(p-q)", "(p-q)(6m-2)", "2(q-p)(1-3m)"] },
+      { id: 30, level: 2, displayNum: "30", exprTex: "3x^2 - 75", targetTex: "3(x - 5)(x + 5)", accepted: ["3(x-5)(x+5)", "3(x+5)(x-5)", "(x-5)(x+5)3", "(x+5)(x-5)3"] },
+      { id: 31, level: 2, displayNum: "31", exprTex: "20a^2b - 5b^3", targetTex: "5b(2a - b)(2a + b)", accepted: ["5b(2a-b)(2a+b)", "5b(2a+b)(2a-b)", "5*b*(2a-b)*(2a+b)"] },
+      { id: 32, level: 2, displayNum: "32(a)", exprTex: "\\text{Factorize } 25x^2 - 36y^2", targetTex: "(5x - 6y)(5x + 6y)", accepted: ["(5x-6y)(5x+6y)", "(5x+6y)(5x-6y)"] },
+      { id: 33, level: 2, displayNum: "32(b)", exprTex: "\\text{Hence, factorize } 10x - 12y - 25x^2 + 36y^2", targetTex: "(5x - 6y)(2 - 5x - 6y)", accepted: ["(5x-6y)(2-5x-6y)", "(2-5x-6y)(5x-6y)", "(6y-5x)(5x+6y-2)"] },
+      { id: 34, level: 2, displayNum: "33(a)", exprTex: "\\text{Factorize } 4a^2 - 9b^2", targetTex: "(2a - 3b)(2a + 3b)", accepted: ["(2a-3b)(2a+3b)", "(2a+3b)(2a-3b)"] },
+      { id: 35, level: 2, displayNum: "33(b)", exprTex: "\\text{Hence, factorize } 4a^2 - 9b^2 + 6a - 9b", targetTex: "(2a - 3b)(2a + 3b + 3)", accepted: ["(2a-3b)(2a+3b+3)", "(2a+3b+3)(2a-3b)", "(3b-2a)(-2a-3b-3)"] },
+      { id: 36, level: 2, displayNum: "34(a)", exprTex: "\\text{Factorize } x^2 - 16y^2", targetTex: "(x - 4y)(x + 4y)", accepted: ["(x-4y)(x+4y)", "(x+4y)(x-4y)"] },
+      { id: 37, level: 2, displayNum: "34(b)", exprTex: "\\text{Hence, factorize } x^2 - 16y^2 - 2x + 8y", targetTex: "(x - 4y)(x + 4y - 2)", accepted: ["(x-4y)(x+4y-2)", "(x+4y-2)(x-4y)", "(4y-x)(2-x-4y)"] },
+      { id: 38, level: 2, displayNum: "35", exprTex: "2x^2 - 12x + 18", targetTex: "2(x - 3)^2", accepted: ["2(x-3)^2", "2(x-3)(x-3)", "2(3-x)^2"] },
+      { id: 39, level: 2, displayNum: "36", exprTex: "50m^2 + 60mn + 18n^2", targetTex: "2(5m + 3n)^2", accepted: ["2(5m+3n)^2", "2(5m+3n)(5m+3n)"] },
+      { id: 40, level: 2, displayNum: "37", exprTex: "p(a - b) + q(b - a)", targetTex: "(p - q)(a - b)", accepted: ["(p-q)(a-b)", "(a-b)(p-q)", "(q-p)(b-a)"] },
+      { id: 41, level: 2, displayNum: "38", exprTex: "(x + 3y)(2a - 5b) + (3x - y)(5b - 2a)", targetTex: "2(2a - 5b)(2y - x)", accepted: ["2(2a-5b)(2y-x)", "2(5b-2a)(x-2y)", "2(2y-x)(2a-5b)"] },
+      { id: 42, level: 2, displayNum: "39", exprTex: "a^2 - b^2 - a - b", targetTex: "(a + b)(a - b - 1)", accepted: ["(a+b)(a-b-1)", "(a-b-1)(a+b)"] },
+      { id: 43, level: 2, displayNum: "40", exprTex: "x^2 - y^2 + 4x - 4y", targetTex: "(x - y)(x + y + 4)", accepted: ["(x-y)(x+y+4)", "(x+y+4)(x-y)"] },
+      { id: 44, level: 2, displayNum: "41", exprTex: "16 - (x - 2)^2", targetTex: "(6 - x)(x + 2)", accepted: ["(6-x)(x+2)", "(x+2)(6-x)", "(6-x)(2+x)", "(x+2)(6-x)"] },
+      { id: 45, level: 2, displayNum: "42", exprTex: "(3x + 1)^2 - 49", targetTex: "3(x - 2)(3x + 8)", accepted: ["3(x-2)(3x+8)", "3(3x+8)(x-2)", "(x-2)(3x+8)3", "(3x+8)(x-2)3"] },
+      { id: 46, level: 2, displayNum: "43", exprTex: "4(a + b)^2 - 9(a - b)^2", targetTex: "(5b - a)(5a - b)", accepted: ["(5b-a)(5a-b)", "(5a-b)(5b-a)", "(a-5b)(b-5a)"] },
+      { id: 47, level: 2, displayNum: "44", exprTex: "x^2 - 4y^2 + 2x - 4y", targetTex: "(x - 2y)(x + 2y + 2)", accepted: ["(x-2y)(x+2y+2)", "(x+2y+2)(x-2y)"] },
+      { id: 48, level: 2, displayNum: "45", exprTex: "a^3 - ab^2 + a^2b - b^3", targetTex: "(a - b)(a + b)^2", accepted: ["(a-b)(a+b)^2", "(a-b)(a+b)(a+b)", "(a+b)^2(a-b)", "(a+b)(a+b)(a-b)"] },
+      { id: 49, level: 2, displayNum: "46(a)", exprTex: "\\text{Factorize } 9m^2 - 16n^2", targetTex: "(3m - 4n)(3m + 4n)", accepted: ["(3m-4n)(3m+4n)", "(3m+4n)(3m-4n)"] },
+      { id: 50, level: 2, displayNum: "46(b)", exprTex: "\\text{Hence, factorize } 9m^2 - 16n^2 - 15m - 20n", targetTex: "(3m + 4n)(3m - 4n - 5)", accepted: ["(3m+4n)(3m-4n-5)", "(3m-4n-5)(3m+4n)"] },
+      { id: 51, level: 2, displayNum: "47", exprTex: "3x^3 - 12x^2y + 12xy^2", targetTex: "3x(x - 2y)^2", accepted: ["3x(x-2y)^2", "3x(x-2y)(x-2y)", "3x(2y-x)^2"] },
+      { id: 52, level: 2, displayNum: "48", exprTex: "(2x + 5)^2 - (x - 1)^2", targetTex: "(x + 6)(3x + 4)", accepted: ["(x+6)(3x+4)", "(3x+4)(x+6)"] },
+      { id: 53, level: 2, displayNum: "49", exprTex: "a^2 - 9b^2 + 5a - 15b", targetTex: "(a - 3b)(a + 3b + 5)", accepted: ["(a-3b)(a+3b+5)", "(a+3b+5)(a-3b)"] },
+      { id: 54, level: 2, displayNum: "50(a)", exprTex: "\\text{Factorize } x^2 - 25", targetTex: "(x - 5)(x + 5)", accepted: ["(x-5)(x+5)", "(x+5)(x-5)"] },
+      { id: 55, level: 2, displayNum: "50(b)", exprTex: "\\text{Hence, factorize } 2x^2 - 50 + 3x + 15", targetTex: "(x + 5)(2x - 7)", accepted: ["(x+5)(2x-7)", "(2x-7)(x+5)"] }
+    ];
+
+    let userAnswers = {};
+    let checkStatus = {}; // 'correct' | 'incorrect' | 'unattempted'
+    let currentFilter = 'all';
+    let activeInputId = null;
+    let keypadVisible = true;
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let isTeacherUnlocked = false;
+    let pendingSolutionQId = null;
+
+    window.onload = function() {
+      loadLocalStorage();
+      initTimer();
+      populateJumpSelect();
+      renderQuestions();
+      updateDashboard();
+
+      // Set default submission date
+      const today = new Date().toISOString().split('T')[0];
+      const subDate = document.getElementById('submissionDate');
+      if (subDate) subDate.value = today;
+    };
+
+    function renderKaTeX(elementId, latexStr) {
+      const el = document.getElementById(elementId);
+      if (el && window.katex) {
+        try {
+          katex.render(latexStr, el, { throwOnError: false });
+        } catch (e) {
+          el.innerText = latexStr;
+        }
+      }
+    }
+
+    function initTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const display = document.getElementById('timerDisplay');
+      if (display) {
+        display.innerText = formatTime(timerSeconds);
+      }
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    window.setFilter = function(filterType) {
+      currentFilter = filterType;
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.className = 'filter-tab px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition';
+      });
+
+      const activeBtn = document.getElementById(`filter-${filterType}`);
+      if (activeBtn) {
+        activeBtn.className = 'filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white transition';
+      }
+
+      renderQuestions();
+    };
+
+    window.jumpToQuestion = function(qId) {
+      const num = parseInt(qId, 10);
+      const card = document.getElementById(`card-${num}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setActiveInput(num);
+      }
+    };
+
+    function populateJumpSelect() {
+      const select = document.getElementById('jumpSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      questionsData.forEach(q => {
+        const opt = document.createElement('option');
+        opt.value = q.id;
+        opt.innerText = `Q#${q.displayNum}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filtered = questionsData.filter(q => {
+        const status = checkStatus[q.id] || 'unattempted';
+        if (currentFilter === 'level1') return q.level === 1;
+        if (currentFilter === 'level2') return q.level === 2;
+        if (currentFilter === 'attempted') return status !== 'unattempted';
+        if (currentFilter === 'unanswered') return status === 'unattempted';
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 text-slate-500 bg-slate-800/30 rounded-2xl border border-slate-800">
+            <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+            <p class="text-sm">No questions matching the selected filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(q => {
+        const status = checkStatus[q.id] || 'unattempted';
+        const userVal = userAnswers[q.id] || '';
+
+        let borderClass = 'border-slate-800 hover:border-slate-700';
+        let badgeBg = 'bg-slate-800 text-slate-400';
+        let statusIcon = '';
+
+        if (status === 'correct') {
+          borderClass = 'border-emerald-500/50 bg-emerald-950/10';
+          badgeBg = 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          statusIcon = '<i class="fa-solid fa-circle-check text-emerald-400 ml-1.5"></i>';
+        } else if (status === 'incorrect') {
+          borderClass = 'border-rose-500/50 bg-rose-950/10';
+          badgeBg = 'bg-rose-500/20 text-rose-400 border border-rose-500/30';
+          statusIcon = '<i class="fa-solid fa-circle-xmark text-rose-400 ml-1.5"></i>';
+        }
+
+        const card = document.createElement('div');
+        card.id = `card-${q.id}`;
+        card.className = `bg-slate-800/50 border ${borderClass} rounded-2xl p-4 sm:p-5 transition-all duration-200 flex flex-col justify-between`;
+
+        card.innerHTML = `
+          <div>
+            <!-- Question Header -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-800/50 px-2.5 py-1 rounded-lg">
+                  Q#${q.displayNum}
+                </span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md ${q.level === 1 ? 'bg-blue-900/40 text-blue-300' : 'bg-purple-900/40 text-purple-300'}">
+                  Level ${q.level}
+                </span>
+              </div>
+
+              <!-- Protected Solution Toggle Button -->
+              <button onclick="toggleSolution(${q.id})" class="text-slate-400 hover:text-amber-400 text-xs flex items-center gap-1 transition" title="${isTeacherUnlocked ? 'Toggle solution view' : 'Requires teacher password'}">
+                <i class="fa-solid ${isTeacherUnlocked ? 'fa-lightbulb text-amber-400' : 'fa-lock text-amber-500/70'}"></i>
+                <span class="text-[11px]">${isTeacherUnlocked ? 'Solution' : 'Protected'}</span>
+              </button>
+            </div>
+
+            <!-- Problem Expression -->
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800/80 mb-4 overflow-x-auto min-h-[50px] flex items-center justify-between">
+              <div id="katex-expr-${q.id}" class="text-base sm:text-lg text-slate-100 font-medium"></div>
+              ${statusIcon}
+            </div>
+
+            <!-- Target Solution Box (Hidden until password verified) -->
+            <div id="solutionBox-${q.id}" class="hidden mb-4 bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 text-xs">
+              <span class="text-amber-400 font-bold block mb-1">Target Solution:</span>
+              <div id="katex-target-${q.id}" class="text-amber-200 font-mono"></div>
+            </div>
+          </div>
+
+          <!-- Answer Input Field -->
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Factorized Answer:</label>
+            <input 
+              type="text" 
+              id="input-${q.id}" 
+              value="${escapeHtml(userVal)}" 
+              onfocus="setActiveInput(${q.id})"
+              oninput="handleInputChange(${q.id}, this.value)"
+              placeholder="e.g. (x - 2)(x + 3)" 
+              class="w-full bg-slate-900 border ${status === 'correct' ? 'border-emerald-500' : status === 'incorrect' ? 'border-rose-500' : 'border-slate-700 focus:border-indigo-500'} rounded-xl px-3.5 py-2 text-sm text-slate-100 font-mono focus:outline-none transition"
+            />
+          </div>
+        `;
+
+        container.appendChild(card);
+
+        // Render KaTeX for Question
+        setTimeout(() => {
+          renderKaTeX(`katex-expr-${q.id}`, q.exprTex);
+          renderKaTeX(`katex-target-${q.id}`, q.targetTex);
+        }, 10);
+      });
+    }
+
+    window.setActiveInput = function(qId) {
+      activeInputId = qId;
+      const targetLabel = document.getElementById('activeQuestionTarget');
+      if (targetLabel) {
+        targetLabel.innerText = `Editing Q#${questionsData.find(q => q.id === qId)?.displayNum || qId}`;
+      }
+    };
+
+    function normalizeAns(str) {
+      if (!str) return '';
+      return str
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/\*\*/g, '^')
+        .replace(/\*/g, '');
+    }
+
+    function parseMonomialFactors(monoStr) {
+      if (!monoStr) return [];
+      let factors = [];
+      let s = monoStr;
+      
+      if (s.startsWith('-')) {
+        factors.push('-');
+        s = s.slice(1);
+      } else if (s.startsWith('+')) {
+        s = s.slice(1);
+      }
+      
+      if (!s) return factors;
+      
+      let numMatch = s.match(/^(\d+)/);
+      if (numMatch) {
+        factors.push(numMatch[1]);
+        s = s.slice(numMatch[1].length);
+      }
+      
+      if (s) {
+        let varMatches = s.match(/([a-z](\^\d+)?)/g);
+        if (varMatches) {
+          factors.push(...varMatches);
+        } else {
+          factors.push(s);
+        }
+      }
+      
+      return factors;
+    }
+
+    function canonicalizePolynomial(polyStr) {
+      if (!polyStr) return '';
+      let terms = [];
+      let current = '';
+      for (let i = 0; i < polyStr.length; i++) {
+        let ch = polyStr[i];
+        if ((ch === '+' || ch === '-') && i > 0 && polyStr[i-1] !== '^' && polyStr[i-1] !== '(') {
+          if (current) terms.push(current);
+          current = ch;
+        } else {
+          current += ch;
+        }
+      }
+      if (current) terms.push(current);
+      
+      terms = terms.map(t => t.startsWith('+') ? t.slice(1) : t);
+      
+      terms.sort((a, b) => {
+        let aHasVar = /[a-z]/.test(a);
+        let bHasVar = /[a-z]/.test(b);
+        if (aHasVar && !bHasVar) return -1;
+        if (!aHasVar && bHasVar) return 1;
+        return a.localeCompare(b);
+      });
+      
+      return terms.join('+').replace(/\+-/g, '-');
+    }
+
+    function canonicalizeExpression(str) {
+      if (!str) return '';
+      
+      let s = str.toLowerCase().replace(/\s+/g, '');
+      s = s.replace(/\*\*/g, '^');
+      
+      // Expand factor powers: (expr)^2 -> (expr)(expr), (expr)^3 -> (expr)(expr)(expr)
+      s = s.replace(/(\([^)]+\))\^2/g, '$1$1');
+      s = s.replace(/(\([^)]+\))\^3/g, '$1$1$1');
+      
+      // Extract bracketed factors
+      let bracketedFactors = [];
+      let remaining = s.replace(/\(([^)]+)\)/g, (match, inner) => {
+        let canonInner = canonicalizePolynomial(inner);
+        bracketedFactors.push(`(${canonInner})`);
+        return '';
+      });
+      
+      remaining = remaining.replace(/\*/g, '');
+      let monomialFactors = parseMonomialFactors(remaining);
+      
+      let allFactors = [...monomialFactors, ...bracketedFactors];
+      allFactors.sort();
+      
+      return allFactors.join('*');
+    }
+
+    function isAnswerCorrect(userVal, question) {
+      if (!userVal || userVal.trim() === '') return false;
+      
+      const normUser = normalizeAns(userVal);
+      const canonUser = canonicalizeExpression(userVal);
+      
+      for (let acc of question.accepted) {
+        const normAcc = normalizeAns(acc);
+        if (normUser === normAcc) return true;
+        
+        const canonAcc = canonicalizeExpression(acc);
+        if (canonUser && canonAcc && canonUser === canonAcc) return true;
+      }
+      
+      return false;
+    }
+
+    window.handleInputChange = function(qId, val) {
+      userAnswers[qId] = val;
+      const question = questionsData.find(q => q.id === qId);
+      if (!question) return;
+
+      if (!val || val.trim() === '') {
+        checkStatus[qId] = 'unattempted';
+      } else {
+        const isCorrect = isAnswerCorrect(val, question);
+        checkStatus[qId] = isCorrect ? 'correct' : 'incorrect';
+      }
+
+      saveLocalStorage();
+      updateDashboard();
+      updateCardStatusUI(qId);
+    };
+
+    function updateCardStatusUI(qId) {
+      const status = checkStatus[qId] || 'unattempted';
+      const inputEl = document.getElementById(`input-${qId}`);
+      if (inputEl) {
+        inputEl.className = `w-full bg-slate-900 border ${status === 'correct' ? 'border-emerald-500' : status === 'incorrect' ? 'border-rose-500' : 'border-slate-700 focus:border-indigo-500'} rounded-xl px-3.5 py-2 text-sm text-slate-100 font-mono focus:outline-none transition`;
+      }
+    }
+
+    window.keyInsert = function(char) {
+      if (!activeInputId) {
+        if (questionsData.length > 0) setActiveInput(questionsData[0].id);
+        else return;
+      }
+      const inputEl = document.getElementById(`input-${activeInputId}`);
+      if (!inputEl) return;
+
+      const start = inputEl.selectionStart || inputEl.value.length;
+      const end = inputEl.selectionEnd || inputEl.value.length;
+      const val = inputEl.value;
+
+      const newVal = val.substring(0, start) + char + val.substring(end);
+      inputEl.value = newVal;
+      inputEl.selectionStart = inputEl.selectionEnd = start + char.length;
+      inputEl.focus();
+
+      handleInputChange(activeInputId, newVal);
+    };
+
+    window.keyBackspace = function() {
+      if (!activeInputId) return;
+      const inputEl = document.getElementById(`input-${activeInputId}`);
+      if (!inputEl) return;
+
+      const start = inputEl.selectionStart || inputEl.value.length;
+      const end = inputEl.selectionEnd || inputEl.value.length;
+      const val = inputEl.value;
+
+      if (start === end && start > 0) {
+        const newVal = val.substring(0, start - 1) + val.substring(end);
+        inputEl.value = newVal;
+        inputEl.selectionStart = inputEl.selectionEnd = start - 1;
+      } else if (start !== end) {
+        const newVal = val.substring(0, start) + val.substring(end);
+        inputEl.value = newVal;
+        inputEl.selectionStart = inputEl.selectionEnd = start;
+      }
+
+      inputEl.focus();
+      handleInputChange(activeInputId, inputEl.value);
+    };
+
+    window.clearActiveInput = function() {
+      if (!activeInputId) return;
+      const inputEl = document.getElementById(`input-${activeInputId}`);
+      if (!inputEl) return;
+      inputEl.value = '';
+      inputEl.focus();
+      handleInputChange(activeInputId, '');
+    };
+
+    window.toggleVirtualKeyboard = function() {
+      const keypad = document.getElementById('virtualKeypad');
+      if (keypad) {
+        keypadVisible = !keypadVisible;
+        if (keypadVisible) {
+          keypad.classList.remove('translate-y-full');
+        } else {
+          keypad.classList.add('translate-y-full');
+        }
+      }
+    };
+
+    window.keyNextQuestion = function() {
+      if (!activeInputId) {
+        if (questionsData.length > 0) {
+          setActiveInput(questionsData[0].id);
+          jumpToQuestion(questionsData[0].id);
+        }
+        return;
+      }
+      const currentIndex = questionsData.findIndex(q => q.id === activeInputId);
+      if (currentIndex >= 0 && currentIndex < questionsData.length - 1) {
+        const nextQ = questionsData[currentIndex + 1];
+        setActiveInput(nextQ.id);
+        jumpToQuestion(nextQ.id);
+      }
+    };
+
+    window.openPasswordModal = function(qId = null) {
+      if (qId) pendingSolutionQId = qId;
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordError').classList.add('hidden');
+      document.getElementById('passwordModal').classList.remove('hidden');
+      setTimeout(() => {
+        const pwdInput = document.getElementById('passwordInput');
+        if (pwdInput) pwdInput.focus();
+      }, 100);
+    };
+
+    window.closePasswordModal = function() {
+      document.getElementById('passwordModal').classList.add('hidden');
+      pendingSolutionQId = null;
+    };
+
+    window.verifyPassword = function(event) {
+      event.preventDefault();
+      const inputPwd = document.getElementById('passwordInput').value.trim();
+      const errorEl = document.getElementById('passwordError');
+
+      if (inputPwd === 'math2627') {
+        isTeacherUnlocked = true;
+        closePasswordModal();
+        updateTeacherUI();
+        
+        // Reveal solutions across cards
+        renderQuestions();
+
+        if (pendingSolutionQId) {
+          const solBox = document.getElementById(`solutionBox-${pendingSolutionQId}`);
+          if (solBox) solBox.classList.remove('hidden');
+          pendingSolutionQId = null;
+        }
+      } else {
+        errorEl.classList.remove('hidden');
+      }
+    };
+
+    function updateTeacherUI() {
+      const btn = document.getElementById('teacherUnlockBtn');
+      if (btn) {
+        btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold';
+        btn.innerHTML = `<i class="fa-solid fa-lock-open"></i> <span id="teacherBtnText" class="hidden sm:inline">Teacher Mode Unlocked</span>`;
+      }
+    }
+
+    window.toggleSolution = function(qId) {
+      if (!isTeacherUnlocked) {
+        openPasswordModal(qId);
+        return;
+      }
+
+      const solBox = document.getElementById(`solutionBox-${qId}`);
+      if (solBox) {
+        solBox.classList.toggle('hidden');
+      }
+    };
+
+    function updateDashboard() {
+      let correct = 0;
+      let incorrect = 0;
+      let attempted = 0;
+
+      questionsData.forEach(q => {
+        const st = checkStatus[q.id];
+        if (st === 'correct') {
+          correct++;
+          attempted++;
+        } else if (st === 'incorrect') {
+          incorrect++;
+          attempted++;
+        }
+      });
+
+      const total = questionsData.length;
+      const progressPercent = Math.round((attempted / total) * 100);
+      const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+
+      // Update counters
+      document.getElementById('correctCount').innerText = correct;
+      document.getElementById('incorrectCount').innerText = incorrect;
+      document.getElementById('accuracyScore').innerText = `${accuracy}%`;
+      document.getElementById('progressPercent').innerText = `${progressPercent}% (${attempted}/${total})`;
+
+      const progressBar = document.getElementById('progressBar');
+      if (progressBar) progressBar.style.width = `${progressPercent}%`;
+
+      // Minimum Requirement Badge (at least 30 answered)
+      const reqBadge = document.getElementById('requirementBadge');
+      const reqText = document.getElementById('reqText');
+      if (reqBadge && reqText) {
+        if (attempted >= 30) {
+          reqBadge.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+          reqBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Requirement Met: ${attempted}/30 Answered</span>`;
+        } else {
+          reqBadge.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30';
+          reqBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>Requirement: ${attempted}/30 Answered</span>`;
+        }
+      }
+    }
+
+    window.openSubmitModal = function() {
+      let attempted = 0;
+      questionsData.forEach(q => {
+        if (checkStatus[q.id] && checkStatus[q.id] !== 'unattempted') attempted++;
+      });
+
+      document.getElementById('modalAnsweredCount').innerText = `${attempted} / 55`;
+      document.getElementById('submitModal').classList.remove('hidden');
+    };
+
+    window.closeSubmitModal = function() {
+      document.getElementById('submitModal').classList.add('hidden');
+    };
+
+    window.generateFinalReport = function(event) {
+      event.preventDefault();
+      closeSubmitModal();
+
+      const name = document.getElementById('studentName').value.trim();
+      const cls = document.getElementById('studentClass').value.trim();
+      const clsNum = document.getElementById('studentClassNum').value.trim();
+      const subDate = document.getElementById('submissionDate').value;
+
+      document.getElementById('rptStudentName').innerText = name || '-';
+      document.getElementById('rptStudentClass').innerText = `${cls || '-'} (${clsNum || '-'})`;
+      document.getElementById('rptDate').innerText = subDate || '-';
+      document.getElementById('rptTimeTaken').innerText = formatTime(timerSeconds);
+
+      let correct = 0;
+      let incorrect = 0;
+      let attempted = 0;
+
+      const tableBody = document.getElementById('rptTableBody');
+      tableBody.innerHTML = '';
+
+      questionsData.forEach(q => {
+        const status = checkStatus[q.id] || 'unattempted';
+        const uAns = userAnswers[q.id] || '';
+
+        if (status === 'correct') correct++;
+        if (status === 'incorrect') incorrect++;
+        if (status !== 'unattempted') attempted++;
+
+        let statusTag = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400">Unattempted</span>`;
+        if (status === 'correct') {
+          statusTag = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-900/50 text-emerald-300 border border-emerald-700/50">Correct</span>`;
+        } else if (status === 'incorrect') {
+          statusTag = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-900/50 text-rose-300 border border-rose-700/50">Incorrect</span>`;
+        }
+
+        const targetSolContent = isTeacherUnlocked 
+          ? `<div id="rpt-sol-${q.id}"></div>` 
+          : `<span class="text-amber-400/80 italic text-[10px] flex items-center gap-1"><i class="fa-solid fa-lock text-[9px]"></i> Protected</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-700/40 hover:bg-slate-800/40';
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-indigo-400">#${q.displayNum}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${q.level === 1 ? 'bg-blue-900/50 text-blue-300' : 'bg-purple-900/50 text-purple-300'}">L${q.level}</span></td>
+          <td class="p-3"><div id="rpt-q-${q.id}" class="text-slate-100"></div></td>
+          <td class="p-3 font-mono ${status === 'correct' ? 'text-emerald-300' : status === 'incorrect' ? 'text-rose-300' : 'text-slate-500'}">${escapeHtml(uAns) || '-'}</td>
+          <td class="p-3 font-mono text-indigo-300">${targetSolContent}</td>
+          <td class="p-3 text-center">${statusTag}</td>
+        `;
+        tableBody.appendChild(tr);
+
+        setTimeout(() => {
+          renderKaTeX(`rpt-q-${q.id}`, q.exprTex);
+          if (isTeacherUnlocked) {
+            renderKaTeX(`rpt-sol-${q.id}`, q.targetTex);
+          }
+        }, 10);
+      });
+
+      document.getElementById('rptTotalAttempted').innerText = `${attempted} / 55`;
+      document.getElementById('rptCorrectCount').innerText = correct;
+      document.getElementById('rptIncorrectCount').innerText = incorrect;
+
+      const acc = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+      document.getElementById('rptAccuracy').innerText = `${acc}%`;
+
+      // Show Report Screen
+      document.getElementById('reportPage').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.closeReportPage = function() {
+      document.getElementById('reportPage').classList.add('hidden');
+    };
+
+    function saveLocalStorage() {
+      try {
+        localStorage.setItem('factorization_userAnswers', JSON.stringify(userAnswers));
+        localStorage.setItem('factorization_checkStatus', JSON.stringify(checkStatus));
+        localStorage.setItem('factorization_timerSeconds', timerSeconds.toString());
+      } catch (e) {}
+    }
+
+    function loadLocalStorage() {
+      try {
+        const savedAns = localStorage.getItem('factorization_userAnswers');
+        const savedStatus = localStorage.getItem('factorization_checkStatus');
+        const savedTimer = localStorage.getItem('factorization_timerSeconds');
+
+        if (savedAns) userAnswers = JSON.parse(savedAns);
+        if (savedStatus) checkStatus = JSON.parse(savedStatus);
+        if (savedTimer) timerSeconds = parseInt(savedTimer, 10) || 0;
+      } catch (e) {}
+    }
+
+    window.confirmResetAll = function() {
+      if (confirm("Are you sure you want to reset all your progress and answers? This action cannot be undone.")) {
+        userAnswers = {};
+        checkStatus = {};
+        timerSeconds = 0;
+        localStorage.clear();
+        updateDashboard();
+        renderQuestions();
+      }
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
